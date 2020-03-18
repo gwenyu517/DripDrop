@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 //GLEW must be included before GLUT or GLFW
 #define GLEW_STATIC
@@ -11,17 +12,30 @@
 
 #include "shader.h"
 
-const char* title = "Triangle";
+const char* title = "BasicQuad";
 GLFWwindow* window;
-GLuint vertexbuffer;
-GLuint VertexArrayID;
 int width = 1024;
 int height = 768;
+const char* vertexShaderFile = "SimpleVertexShader.vertexshader";
+const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
 
-static const GLfloat g_vertex_buffer_data[] = {
+double prevTime;
+double currTime;
+
+GLuint VertexArrayID;
+GLuint vertexbuffer;
+GLuint elementbuffer;
+
+static const GLfloat vertices[] = {
 		-1.0f, -1.0f, 0.0f,
 		1.0f, -1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f
+};
+//std::vector<unsigned short> indices = {
+static const unsigned short indices[] = {
+		0,1,2,
+		0,2,3
 };
 
 glm::mat4 generateMVPmatrix() {
@@ -56,21 +70,46 @@ void createVertexBuffer() {
 
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
-			g_vertex_buffer_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),
+			vertices, GL_STATIC_DRAW);
+}
+void createElementBuffer() {
+	glGenBuffers(1, &elementbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, elementbuffer);
+//	glBufferData(GL_ARRAY_BUFFER, indices.size()*sizeof(unsigned short),
+			//&indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(indices),
+				indices, GL_STATIC_DRAW);
 }
 
 void cleanUp() {
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteVertexArrays(1, &VertexArrayID);
+	glDeleteBuffers(1, &elementbuffer);
 }
 
-void renderToTexture() {
+void render() {
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(
+			0,			// attribute
+			3, 			// size
+			GL_FLOAT, 	// type
+			GL_FALSE, 	// normalized?
+			0, 			// stride
+			(void*)0	// array buffer offset
+	);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		//indices.size(),    // count
+		sizeof(indices),
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+
 	glDisableVertexAttribArray(0);
 }
 
@@ -111,14 +150,19 @@ int main() {
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
 	createVertexBuffer();
-	GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
+	createElementBuffer();
+	GLuint programID = LoadShaders(vertexShaderFile, fragmentShaderFile);
 
 	//----------- Perspective stuff ----------------
 	glm::mat4 mvp = generateMVPmatrix();
 	// get handle for "MVP" uniform -- only during initialization
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
+	prevTime = glfwGetTime();
+
 	do {
+		currTime = glfwGetTime();
+
 		// Clear the screen.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(programID);
@@ -128,7 +172,7 @@ int main() {
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
 		// You draw here, but there's nothing lol
-		renderToTexture();
+		render();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
