@@ -2,6 +2,8 @@
 #ifndef PARTICLE_H_
 #define PARTICLE_H_
 
+#include <glm/glm.hpp>
+
 /* particles have
  * 		position
  * 		mass
@@ -18,10 +20,29 @@
 
 class Particle {
 private:
-	// stuffs
+	glm::ivec2 position;
+	glm::vec2 velocity;
+	float mass;
+	double timeSinceLastResidual;
+	float mass_static =  0.000050f;
 public:
-	Particle();
+	Particle(int x, int y);
 	~Particle();
+
+	void resetTimeSinceLastResidual();
+	bool leaveResidual();
+	bool isStatic();
+	bool isResidual();
+
+	glm::ivec2 getPosition();
+	glm::vec2 getVelocity();
+	float getMass();
+	float getMass_static();
+
+	void setPosition(glm::ivec2 p);
+	void setVelocity(glm::vec2 v);
+	void setMass(float m);
+
 };
 
 /*

@@ -23,6 +23,9 @@
 
 class System {
 private:
+	enum class Region{BL, B, BR};	// this assumes that gravity points "down" on the grid / no change in surface orientation
+	enum class Attrib{water, affinity};
+
 	const int WIDTH;
 	const int HEIGHT;
 	const int SIZE;
@@ -30,15 +33,20 @@ private:
 	int* id_map;
 	float* height_map;	// or double??
 	float* affinity_map; // [0,1] generate on construction
-	std::unordered_map<int, Particle> particle;
+	std::unordered_map<int, Particle> particles;
 
-	void updateVelocity();
+	void updateVelocity(double dt);
 	void leaveResidualDroplets();
 	void updateHeightMap();
 	void constructNewHeightMap();
 	void smoothHeightMap();
 	void erodeHeightMap();
 	void mergeDroplets();
+	int p(glm::ivec2 pos);
+	int p(int x, int y);
+
+	Region determineDirectionOfMovement(Particle p);
+	float sumOf(glm::ivec2 pos, Region region, Attrib attrib);
 
 public:
 	//System();
@@ -46,7 +54,7 @@ public:
 	//System(int width, int height, int initialNumOfParticles);
 	~System();
 
-	void update(float dt);
+	void update(double dt);
 };
 
 
