@@ -26,31 +26,37 @@ private:
 	enum class Region{BL, B, BR};	// this assumes that gravity points "down" on the grid / no change in surface orientation
 	enum class Attrib{water, affinity};
 
-	const int WIDTH;
-	const int HEIGHT;
-	const int SIZE;
+	const int MAP_WIDTH;
+	const int MAP_HEIGHT;
+	const int MAP_SIZE;
+	const float GRID_LENGTH;
 
-	int* id_map;
+	int* id_map;	//hm...well if they overlap they were gonna merge anyway and they're
+					// probably right next to each other anyway so just check if they're
+					// neighboring should be enough?
 	float* height_map;	// or double??
 	float* affinity_map; // [0,1] generate on construction
-	std::unordered_map<int, Particle> particles;
+	std::unordered_map<int, Particle*> particles;
 
 	void updateVelocity(double dt);
-	void leaveResidualDroplets();
+	void updatePosition(double dt);
+	void leaveResidualDroplets(double dt);
 	void updateHeightMap();
+
+	void assignDropletShapes();
 	void constructNewHeightMap();
 	void smoothHeightMap();
 	void erodeHeightMap();
 	void mergeDroplets();
-	int p(glm::ivec2 pos);
+	int p(glm::vec2 pos);
 	int p(int x, int y);
 
-	Region determineDirectionOfMovement(Particle p);
-	float sumOf(glm::ivec2 pos, Region region, Attrib attrib);
+	Region determineDirectionOfMovement(Particle* p);
+	float sumOf(glm::vec2 pos, Region region, Attrib attrib);
 
 public:
 	//System();
-	System(int width, int height);
+	System(float width, float height, float gridLength);
 	//System(int width, int height, int initialNumOfParticles);
 	~System();
 

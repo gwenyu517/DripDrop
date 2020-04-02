@@ -25,18 +25,32 @@ double currTime;
 GLuint VertexArrayID;
 GLuint vertexbuffer;
 GLuint elementbuffer;
+GLuint textureID;
+GLuint textureName;
+GLuint MatrixID;
 
 static const GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		-1.0f, 1.0f, 0.0f
+		-1.0f, -1.0f, 0.0f,		0.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,		1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,		1.0f, 1.0f,
+		-1.0f, 1.0f, 0.0f,		0.0f, 1.0f
 };
 //std::vector<unsigned short> indices = {
 static const unsigned short indices[] = {
 		0,1,2,
 		0,2,3
 };
+
+static GLubyte pixels_test[] = {
+		255, 0, 0, 		0, 255, 0,
+		0, 0, 255, 		255, 255, 0
+};
+
+/*static GLfloat pixels_test[] = {
+		0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+};
+*/
 
 glm::mat4 generateMVPmatrix() {
 	// Projection matrix : 45 deg field of view, width:height ratio, display range 0.1 to 100 units
@@ -66,12 +80,34 @@ glm::mat4 generateMVPmatrix() {
 
 void createVertexBuffer() {
 	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
+	glBindVertexArray(VertexArrayID);		// associate any VBO/IBO that you bind with this VAO
 
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),
 			vertices, GL_STATIC_DRAW);
+}
+
+void setUpVertexAttributes() {
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(
+			0,			// attribute
+			3, 			// size
+			GL_FLOAT, 	// type
+			GL_FALSE, 	// normalized?
+			5 * sizeof(GLfloat), 			// stride
+			(void*)0	// array buffer offset
+	);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(
+			1,			// attribute
+			2, 			// size
+			GL_FLOAT, 	// type
+			GL_FALSE, 	// normalized?
+			5 * sizeof(GLfloat), 			// stride
+			(void*)(3*sizeof(GLfloat))	// array buffer offset
+	);
 }
 void createElementBuffer() {
 	glGenBuffers(1, &elementbuffer);
@@ -82,6 +118,29 @@ void createElementBuffer() {
 				indices, GL_STATIC_DRAW);
 }
 
+void createTexture() {
+	glGenTextures(1, &textureID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(
+			GL_TEXTURE_2D,		// target
+			0, 					// level
+			GL_RGB,					// internal format
+			2,					// width
+			2,					// height
+			0,					// border
+			GL_RGB,					// format
+			GL_UNSIGNED_BYTE,					// type...gl_float???
+			//GL_FLOAT,
+			pixels_test					// data
+	);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
 void cleanUp() {
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteVertexArrays(1, &VertexArrayID);
@@ -89,28 +148,27 @@ void cleanUp() {
 }
 
 void render() {
-	glEnableVertexAttribArray(0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glUniform1i(textureName, 0);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-			0,			// attribute
-			3, 			// size
-			GL_FLOAT, 	// type
-			GL_FALSE, 	// normalized?
-			0, 			// stride
-			(void*)0	// array buffer offset
-	);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 
-	glDrawElements(
+/*	glDrawElements(
 		GL_TRIANGLES,      // mode
 		//indices.size(),    // count
 		sizeof(indices),
 		GL_UNSIGNED_SHORT,   // type
 		(void*)0           // element array buffer offset
 	);
-
+*/
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 }
 
 int main() {
@@ -149,14 +207,20 @@ int main() {
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
+
 	createVertexBuffer();
+	setUpVertexAttributes();
+	createTexture();
 	createElementBuffer();
 	GLuint programID = LoadShaders(vertexShaderFile, fragmentShaderFile);
 
 	//----------- Perspective stuff ----------------
 	glm::mat4 mvp = generateMVPmatrix();
 	// get handle for "MVP" uniform -- only during initialization
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+	//MatrixID = glGetUniformLocation(programID, "MVP");
+
+	textureName = glGetUniformLocation(programID, "myTexture");
+
 
 	prevTime = glfwGetTime();
 
@@ -169,7 +233,8 @@ int main() {
 
 		// send mvp transformation to currently bound shader, in the "MVP" uniform
 		// done in main loop since each model will have different MVP (at least for M part)
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+		//glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
 
 		// You draw here, but there's nothing lol
 		render();

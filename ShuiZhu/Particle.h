@@ -20,26 +20,32 @@
 
 class Particle {
 private:
-	glm::ivec2 position;
+	glm::vec2 position;
 	glm::vec2 velocity;
 	float mass;
 	double timeSinceLastResidual;
 	float mass_static =  0.000050f;
+	double maxResidualTime = 0.4;
+
 public:
-	Particle(int x, int y);
+	//Particle();
+	Particle(glm::vec2 p, float m);
 	~Particle();
 
 	void resetTimeSinceLastResidual();
-	bool leaveResidual();
+	void addResidualTime(double dt);
+	bool leaveResidual(int beta, double dt);
 	bool isStatic();
 	bool isResidual();
 
-	glm::ivec2 getPosition();
+	glm::vec2 getPosition();
 	glm::vec2 getVelocity();
 	float getMass();
 	float getMass_static();
+	double getMaxResidualTime();
+	double getTimeSinceLastResidual();
 
-	void setPosition(glm::ivec2 p);
+	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
 	void setMass(float m);
 
