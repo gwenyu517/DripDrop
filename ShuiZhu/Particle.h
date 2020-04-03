@@ -3,6 +3,7 @@
 #define PARTICLE_H_
 
 #include <glm/glm.hpp>
+#include <vector>
 
 /* particles have
  * 		position
@@ -26,6 +27,9 @@ private:
 	double timeSinceLastResidual;
 	float mass_static =  0.000050f;
 	double maxResidualTime = 0.4;
+	float density = 1.0f;
+	float radius;
+	std::vector<glm::vec2> q;
 
 public:
 	//Particle();
@@ -44,10 +48,16 @@ public:
 	float getMass_static();
 	double getMaxResidualTime();
 	double getTimeSinceLastResidual();
+	float getRadius();
+	float getDensity();
+	std::vector<glm::vec2> getHemispherePositions();
 
 	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
 	void setMass(float m);
+	void setRadius(float r);
+	void addHemispherePosition(glm::vec2 p);
+	void clearHemispherePositions();
 
 };
 

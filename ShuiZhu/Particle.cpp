@@ -64,6 +64,18 @@ double Particle::getTimeSinceLastResidual() {
 	return timeSinceLastResidual;
 }
 
+float Particle::getRadius() {
+	return radius;
+}
+
+float Particle::getDensity() {
+	return density;
+}
+
+std::vector<glm::vec2> Particle::getHemispherePositions() {
+	return q;
+}
+
 void Particle::setPosition(glm::vec2 p) {
 	position = p;
 }
@@ -72,4 +84,16 @@ void Particle::setVelocity(glm::vec2 v) {
 }
 void Particle::setMass(float m) {
 	mass = m;
+}
+
+void Particle::setRadius(float r) {
+	radius = r;
+}
+
+void Particle::addHemispherePosition(glm::vec2 p) {
+	q.push_back(p);
+}
+
+void Particle::clearHemispherePositions() {
+	q.clear();
 }

@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #define GRAVITY 9.80665f
+#define PI 3.14159265359f
 #define BETA 3
 
 // WARNING: I assumed that +x points right, +y points down, but I feel like that is incorrect...
@@ -97,7 +98,6 @@ void System::updateVelocity(double dt) {
 				velocity = speed * glm::normalize(glm::vec2(1, 1));
 		}
 		p->setVelocity(velocity);	// velocity is in reality
-
 	}
 }
 
@@ -148,18 +148,9 @@ System::Region System::determineDirectionOfMovement(Particle* p) {
 
 	// else, random direction
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
-	std::uniform_int_distribution<int> distribution(1, 3);
-	int randomDOM = distribution(generator);
-	switch(randomDOM) {
-		case 1 :
-			return Region::BL;
-		case 2 :
-			return Region::B;
-		case 3 :
-			return Region::BR;
-	}
-
-	return Region::B;
+	std::uniform_int_distribution<int> distribution(2, 4);
+	Region randomDOM = (Region)distribution(generator);
+	return randomDOM;
 }
 
 float System::sumOf(glm::vec2 position, Region region, Attrib attrib) {
@@ -307,7 +298,7 @@ void System::assignDropletShapes() {
 	 * 			particle.radius = cubeRoot(root3) of (3*mass/(2*waterDensity*pi)), they set density to 1
 	 * 		else
 	 * 			particle.radius = cubeRoot((3*pi/4)*(2*mass/N)*waterDensity)
-	 * 			if particle's current q[0] == -1, it's newly static so
+	 * 			if particle's current q.size == 0, it's newly static so
 	 * 				N = [1,5]
 	 * 				q[0] = particle.position
 	 * 				for (i = 1; i < N; i++)
@@ -316,16 +307,70 @@ void System::assignDropletShapes() {
 	 *			otherwise, the particle should have old q positions for reuse
 	 */
 
-	// add array of q to particle???, clear it if it is not static???
-	// add radius?? N??? or just store -1???
+	for (auto i = particles.begin(); i != particles.end(); i++) {
+		Particle* p = i->second;
+
+		if (p->isStatic()) {
+			int n = p->getHemispherePositions().size();
+			// if particle is newly static, fill in N[1,5] hemisphere positions
+			// else, reuse previous positions
+			if (n == 0) {
+				std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
+				std::uniform_int_distribution<int> distribution(1, 5);
+				n = distribution(generator);
+				glm::vec2 q(p->getPosition());
+				p->addHemispherePosition(q);
+				for (int i = 0; i < n - 1; i++) {
+					Region direction = (Region)distribution(generator);
+					switch(direction) {
+						case Region::L :
+							q += glm::vec2(-GRID_LENGTH, 0);
+						case Region::BL :
+							q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+						case Region::B :
+							q += glm::vec2(0, -GRID_LENGTH);
+						case Region::BR :
+							q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+						case Region::R :
+							q += glm::vec2(GRID_LENGTH, 0);
+					}
+					p->addHemispherePosition(q);
+				}
+			}
+			// particle.radius = cubeRoot((3*pi/4)*(2*mass/N)*waterDensity)
+			float radius = glm::pow((3*PI/4) * (2*p->getMass()/n) * p->getDensity(), 1/3);
+			p->setRadius(radius);
+		} else {
+			// if moving
+			// particle.radius = cubeRoot(root3) of (3*mass/(2*waterDensity*pi)), they set density to 1
+			p->clearHemispherePositions();
+			float radius = glm::pow(3*p->getMass() / (2*p->getDensity()*PI), 1/3);
+			p->setRadius(radius);
+		}
+	}
 }
+
 void System::constructNewHeightMap() {
-	/* 	hmmmmmmm.....by particle or by grid?? remember to update ID map as well
+	/* 	hmmmmmmm.....by particle, remember to update ID map as well
+	 * get radius, drop decimal/convert to int, and search [p-r, p+r] on map
+	 *  for [x - r, x + r]
+	 *  	for [y - r, y + r]
+	 *  		if radius^2 - ((x,y) - particle.position)^2 > 0
+	 *  		and current height(x,y) < sqrt(radius^2 - ((x,y) - particle.position)^2)
+	 *  			height = sqrt(radius^2 - ((x,y) - particle.position)^2)
+	 *  			set ID
+	 *  		else, continue
 	 */
 
+	for (auto i = particles.begin(); i != particles.end(); i++) {
+		Particle* p = i->second;
+	}
 }
 void System::smoothHeightMap() {
-
+/*
+ * height of every cell = height of (surrounding 8 neighbors + itself) / 9
+ * if height < e_h, height = 0 --> e_h = 0.01
+ */
 }
 void System::erodeHeightMap() {
 

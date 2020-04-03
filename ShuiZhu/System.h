@@ -23,7 +23,13 @@
 
 class System {
 private:
-	enum class Region{BL, B, BR};	// this assumes that gravity points "down" on the grid / no change in surface orientation
+	/* Regions
+	 * 8 7 6
+	 * 1 x 5
+	 * 2 3 4
+	 */
+	//not really intuitive, but convenient; also, assuming gravity points down / no change in orientation
+	enum class Region{L = 1, BL, B, BR, R/*, TR, T, TL*/};
 	enum class Attrib{water, affinity};
 
 	const int MAP_WIDTH;
