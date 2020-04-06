@@ -54,8 +54,10 @@ private:
 	void smoothHeightMap();
 	void erodeHeightMap();
 	void mergeDroplets();
-	int p(glm::vec2 pos);
-	int p(int x, int y);
+	int index(glm::vec2 pos);
+	int index(int x, int y);
+	glm::vec2 position(int index);
+	glm::vec2 position(int x, int y);
 
 	Region determineDirectionOfMovement(Particle* p);
 	float sumOf(glm::vec2 pos, Region region, Attrib attrib);

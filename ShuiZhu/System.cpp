@@ -7,6 +7,7 @@
 #define GRAVITY 9.80665f
 #define PI 3.14159265359f
 #define BETA 3
+#define E_H 0.01
 
 // WARNING: I assumed that +x points right, +y points down, but I feel like that is incorrect...
 
@@ -52,7 +53,7 @@ System::System(float width, float height, float gridLength) :
 		float py = ((float)py_distribution(generator) + 0.5f) * GRID_LENGTH;
 		float mass = mass_distribution(generator) / 10000000000.0f;
 		particles.insert({ i, new Particle(glm::vec2(px, py), mass) });
-		id_map[p(particles[i]->getPosition())] = i;
+		id_map[index(particles[i]->getPosition())] = i;
 
 	}
 }
@@ -159,69 +160,69 @@ float System::sumOf(glm::vec2 position, Region region, Attrib attrib) {
 	switch(region){
 		case Region::BL :
 			if (attrib == Attrib::water){
-				return height_map[p(pos.x - 3, pos.y + 2)]		// turn to minus y, since +y is now up
-					+ height_map[p(pos.x - 2, pos.y + 2)]
-					+ height_map[p(pos.x - 1, pos.y + 2)]
-					+ height_map[p(pos.x - 3, pos.y + 3)]
-					+ height_map[p(pos.x - 2, pos.y + 3)]
-					+ height_map[p(pos.x - 1, pos.y + 3)]
-					+ height_map[p(pos.x - 3, pos.y + 4)]
-					+ height_map[p(pos.x - 2, pos.y + 4)]
-					+ height_map[p(pos.x - 1, pos.y + 4)];
+				return height_map[index(pos.x - 3, pos.y + 2)]		// turn to minus y, since +y is now up
+					+ height_map[index(pos.x - 2, pos.y + 2)]
+					+ height_map[index(pos.x - 1, pos.y + 2)]
+					+ height_map[index(pos.x - 3, pos.y + 3)]
+					+ height_map[index(pos.x - 2, pos.y + 3)]
+					+ height_map[index(pos.x - 1, pos.y + 3)]
+					+ height_map[index(pos.x - 3, pos.y + 4)]
+					+ height_map[index(pos.x - 2, pos.y + 4)]
+					+ height_map[index(pos.x - 1, pos.y + 4)];
 			} else {
-				return affinity_map[p(pos.x - 3, pos.y + 2)]
-					+ affinity_map[p(pos.x - 2, pos.y + 2)]
-					+ affinity_map[p(pos.x - 1, pos.y + 2)]
-					+ affinity_map[p(pos.x - 3, pos.y + 3)]
-					+ affinity_map[p(pos.x - 2, pos.y + 3)]
-					+ affinity_map[p(pos.x - 1, pos.y + 3)]
-					+ affinity_map[p(pos.x - 3, pos.y + 4)]
-					+ affinity_map[p(pos.x - 2, pos.y + 4)]
-					+ affinity_map[p(pos.x - 1, pos.y + 4)];
+				return affinity_map[index(pos.x - 3, pos.y + 2)]
+					+ affinity_map[index(pos.x - 2, pos.y + 2)]
+					+ affinity_map[index(pos.x - 1, pos.y + 2)]
+					+ affinity_map[index(pos.x - 3, pos.y + 3)]
+					+ affinity_map[index(pos.x - 2, pos.y + 3)]
+					+ affinity_map[index(pos.x - 1, pos.y + 3)]
+					+ affinity_map[index(pos.x - 3, pos.y + 4)]
+					+ affinity_map[index(pos.x - 2, pos.y + 4)]
+					+ affinity_map[index(pos.x - 1, pos.y + 4)];
 			}
 		case Region::B :
 			if (attrib == Attrib::water){
-				return height_map[p(pos.x - 1, pos.y + 2)]
-					+ height_map[p(pos.x, 	  pos.y + 2)]
-					+ height_map[p(pos.x + 1, pos.y + 2)]
-					+ height_map[p(pos.x - 1, pos.y + 3)]
-					+ height_map[p(pos.x, 	  pos.y + 3)]
-					+ height_map[p(pos.x + 1, pos.y + 3)]
-					+ height_map[p(pos.x - 1, pos.y + 4)]
-					+ height_map[p(pos.x, 	  pos.y + 4)]
-					+ height_map[p(pos.x + 1, pos.y + 4)];
+				return height_map[index(pos.x - 1, pos.y + 2)]
+					+ height_map[index(pos.x, 	  pos.y + 2)]
+					+ height_map[index(pos.x + 1, pos.y + 2)]
+					+ height_map[index(pos.x - 1, pos.y + 3)]
+					+ height_map[index(pos.x, 	  pos.y + 3)]
+					+ height_map[index(pos.x + 1, pos.y + 3)]
+					+ height_map[index(pos.x - 1, pos.y + 4)]
+					+ height_map[index(pos.x, 	  pos.y + 4)]
+					+ height_map[index(pos.x + 1, pos.y + 4)];
 			} else {
-				return affinity_map[p(pos.x - 1, pos.y + 2)]
-					+ affinity_map[p(pos.x, 	  pos.y + 2)]
-					+ affinity_map[p(pos.x + 1, pos.y + 2)]
-					+ affinity_map[p(pos.x - 1, pos.y + 3)]
-					+ affinity_map[p(pos.x, 	  pos.y + 3)]
-					+ affinity_map[p(pos.x + 1, pos.y + 3)]
-					+ affinity_map[p(pos.x - 1, pos.y + 4)]
-					+ affinity_map[p(pos.x, 	  pos.y + 4)]
-					+ affinity_map[p(pos.x + 1, pos.y + 4)];
+				return affinity_map[index(pos.x - 1, pos.y + 2)]
+					+ affinity_map[index(pos.x, 	  pos.y + 2)]
+					+ affinity_map[index(pos.x + 1, pos.y + 2)]
+					+ affinity_map[index(pos.x - 1, pos.y + 3)]
+					+ affinity_map[index(pos.x, 	  pos.y + 3)]
+					+ affinity_map[index(pos.x + 1, pos.y + 3)]
+					+ affinity_map[index(pos.x - 1, pos.y + 4)]
+					+ affinity_map[index(pos.x, 	  pos.y + 4)]
+					+ affinity_map[index(pos.x + 1, pos.y + 4)];
 			}
 		case Region::BR :
 			if (attrib == Attrib::water){
-				return height_map[p(pos.x + 1, pos.y + 2)]
-					+ height_map[p(pos.x + 2, pos.y + 2)]
-					+ height_map[p(pos.x + 3, pos.y + 2)]
-					+ height_map[p(pos.x + 1, pos.y + 3)]
-					+ height_map[p(pos.x + 2, pos.y + 3)]
-					+ height_map[p(pos.x + 3, pos.y + 3)]
-					+ height_map[p(pos.x + 1, pos.y + 4)]
-					+ height_map[p(pos.x + 2, pos.y + 4)]
-					+ height_map[p(pos.x + 3, pos.y + 4)];
+				return height_map[index(pos.x + 1, pos.y + 2)]
+					+ height_map[index(pos.x + 2, pos.y + 2)]
+					+ height_map[index(pos.x + 3, pos.y + 2)]
+					+ height_map[index(pos.x + 1, pos.y + 3)]
+					+ height_map[index(pos.x + 2, pos.y + 3)]
+					+ height_map[index(pos.x + 3, pos.y + 3)]
+					+ height_map[index(pos.x + 1, pos.y + 4)]
+					+ height_map[index(pos.x + 2, pos.y + 4)]
+					+ height_map[index(pos.x + 3, pos.y + 4)];
 			} else {
-				return affinity_map[p(pos.x + 1, pos.y + 2)]
-					+ affinity_map[p(pos.x + 2, pos.y + 2)]
-					+ affinity_map[p(pos.x + 3, pos.y + 2)]
-					+ affinity_map[p(pos.x + 1, pos.y + 3)]
-					+ affinity_map[p(pos.x + 2, pos.y + 3)]
-					+ affinity_map[p(pos.x + 3, pos.y + 3)]
-					+ affinity_map[p(pos.x + 1, pos.y + 4)]
-					+ affinity_map[p(pos.x + 2, pos.y + 4)]
-					+ affinity_map[p(pos.x + 3, pos.y + 4)];
+				return affinity_map[index(pos.x + 1, pos.y + 2)]
+					+ affinity_map[index(pos.x + 2, pos.y + 2)]
+					+ affinity_map[index(pos.x + 3, pos.y + 2)]
+					+ affinity_map[index(pos.x + 1, pos.y + 3)]
+					+ affinity_map[index(pos.x + 2, pos.y + 3)]
+					+ affinity_map[index(pos.x + 3, pos.y + 3)]
+					+ affinity_map[index(pos.x + 1, pos.y + 4)]
+					+ affinity_map[index(pos.x + 2, pos.y + 4)]
+					+ affinity_map[index(pos.x + 3, pos.y + 4)];
 			}
 	}
 	return 0.0f;
@@ -362,8 +363,27 @@ void System::constructNewHeightMap() {
 	 *  		else, continue
 	 */
 
-	for (auto i = particles.begin(); i != particles.end(); i++) {
-		Particle* p = i->second;
+	for (auto p = particles.begin(); p != particles.end(); p++) {
+		Particle* particle = p->second;
+		glm::vec2 particle_position = particle->getPosition();
+		float r = particle->getRadius();
+
+		// range of indices to check on grid
+		int x0 = (int)((particle_position.x - r) / GRID_LENGTH);
+		int x1 = (int)((particle_position.x + r) / GRID_LENGTH);
+		int y0 = (int)((particle_position.y - r) / GRID_LENGTH);
+		int y1 = (int)((particle_position.y + r) / GRID_LENGTH);
+
+		for (int i = x0; i <= x1; i++) {
+			for (int j = y0; j <= y1; j++) {
+				// h in actual terms
+				float h = r*r - glm::distance(position(i,j), particle_position)*glm::distance(position(i,j), particle_position);
+				if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
+					height_map[index(i,j)] = glm::sqrt(h);
+					id_map[index(i,j)] = p->first;
+				}
+			}
+		}
 	}
 }
 void System::smoothHeightMap() {
@@ -371,6 +391,17 @@ void System::smoothHeightMap() {
  * height of every cell = height of (surrounding 8 neighbors + itself) / 9
  * if height < e_h, height = 0 --> e_h = 0.01
  */
+
+	for (int i = 0; i < MAP_WIDTH; i++) {
+		for (int j = 0; j < MAP_HEIGHT; j++) {
+			float sum = height_map[index(i-1, j+1)] + height_map[index(i, j+1)] + height_map[index(i+1, j+1)]
+					  + height_map[index(i-1, j)]   + height_map[index(i, j)]   + height_map[index(i+1, j)]
+					  + height_map[index(i-1, j-1)] + height_map[index(i, j-1)] + height_map[index(i+1, j-1)];
+			height_map[index(i,j)] = sum / 9.0f;
+			if (height_map[index(i,j)] < E_H)
+				height_map[index(i,j)] = 0;
+		}
+	}
 }
 void System::erodeHeightMap() {
 
@@ -380,7 +411,7 @@ void System::mergeDroplets() {
 }
 
 // for now, do wrap-around
-int System::p(glm::vec2 pos) {
+int System::index(glm::vec2 pos) {
 	// reality to grid
 	glm::ivec2 p = pos / GRID_LENGTH;
 
@@ -397,7 +428,7 @@ int System::p(glm::vec2 pos) {
 	return p.y*MAP_WIDTH + p.x;
 }
 
-int System::p(int x, int y) {
+int System::index(int x, int y) {
 	if (x < 0)
 		x += MAP_WIDTH;
 	else if (x >= MAP_WIDTH)
@@ -409,4 +440,21 @@ int System::p(int x, int y) {
 		y -= MAP_HEIGHT;
 
 	return y*MAP_WIDTH + x;
+}
+
+glm::vec2 System::position(int index) {
+	int x = index % MAP_WIDTH;
+	int y = index / MAP_WIDTH;
+
+	float grid_x = ((float)x + 0.5f) * GRID_LENGTH;
+	float grid_y = ((float)y + 0.5f) * GRID_LENGTH;
+
+	return glm::vec2(grid_x, grid_y);
+}
+
+glm::vec2 System::position(int x, int y) {
+	float grid_x = ((float)x + 0.5f) * GRID_LENGTH;
+	float grid_y = ((float)y + 0.5f) * GRID_LENGTH;
+
+	return glm::vec2(grid_x, grid_y);
 }
