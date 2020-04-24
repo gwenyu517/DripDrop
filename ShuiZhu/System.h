@@ -29,7 +29,7 @@ private:
 	 * 2 3 4
 	 */
 	//not really intuitive, but convenient; also, assuming gravity points down / no change in orientation
-	enum class Region{L = 1, BL, B, BR, R/*, TR, T, TL*/};
+	enum class Region{L = 1, BL, B, BR, R, TR, T, TL};
 	enum class Attrib{water, affinity};
 
 	const int MAP_WIDTH;
@@ -42,7 +42,7 @@ private:
 					// neighboring should be enough?
 	float* height_map;	// or double??
 	float* affinity_map; // [0,1] generate on construction
-	std::unordered_map<int, Particle*> particles;
+	std::unordered_map<int, Particle*> particleList;
 
 	void updateVelocity(double dt);
 	void updatePosition(double dt);
@@ -53,11 +53,13 @@ private:
 	void constructNewHeightMap();
 	void smoothHeightMap();
 	void erodeHeightMap();
+	bool isBoundaryCell(int i, int j);
 	void mergeDroplets();
 	int index(glm::vec2 pos);
 	int index(int x, int y);
 	glm::vec2 position(int index);
 	glm::vec2 position(int x, int y);
+	glm::ivec2 gridPosition(int index);
 
 	Region determineDirectionOfMovement(Particle* p);
 	float sumOf(glm::vec2 pos, Region region, Attrib attrib);
@@ -69,6 +71,7 @@ public:
 	~System();
 
 	void update(double dt);
+	float* getHeightMap();
 };
 
 

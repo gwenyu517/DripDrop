@@ -10,12 +10,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "shader.h"
+#include <iostream>
 
-const char* title = "BasicQuad";
+#include "shader.h"
+#include "System.h"
+
+const char* title = "Waaaaa...wo si la";
 GLFWwindow* window;
 int width = 1024;
-int height = 768;
+int height = 1024;
 const char* vertexShaderFile = "SimpleVertexShader.vertexshader";
 const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
 
@@ -51,6 +54,12 @@ static GLubyte pixels_test[] = {
 		1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
 };
 */
+
+// NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
+float system_width = 0.3f;
+float system_height = 0.3f;
+float system_gridlength = 0.01f;
+//float* system_heightMap;
 
 glm::mat4 generateMVPmatrix() {
 	// Projection matrix : 45 deg field of view, width:height ratio, display range 0.1 to 100 units
@@ -123,18 +132,19 @@ void createTexture() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 	glTexImage2D(
 			GL_TEXTURE_2D,		// target
 			0, 					// level
-			GL_RGB,					// internal format
-			2,					// width
-			2,					// height
+			GL_R32F,					// internal format
+			(int)(system_width/system_gridlength),					// width
+			(int)(system_height/system_gridlength),					// height
 			0,					// border
-			GL_RGB,					// format
-			GL_UNSIGNED_BYTE,					// type...gl_float???
-			//GL_FLOAT,
-			pixels_test					// data
+			GL_RED,					// format
+			GL_FLOAT,			// type
+			0					// null data --> reserves memory
 	);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -147,10 +157,21 @@ void cleanUp() {
 	glDeleteBuffers(1, &elementbuffer);
 }
 
-void render() {
+void render(float* data) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	glUniform1i(textureName, 0);
+	glTexSubImage2D(
+			GL_TEXTURE_2D,		// target
+			0,					// level
+			0,					// xoffset
+			0,					// yoffset
+			(int)(system_width/system_gridlength),	// width
+			(int)(system_height/system_gridlength),	// height
+			GL_RED,				// format
+			GL_FLOAT,			// type
+			data
+	);
+	//glUniform1i(textureName, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glEnableVertexAttribArray(0);
@@ -207,6 +228,9 @@ int main() {
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
+	// width, height = 0.3
+	// grid length = 0.01
+	System* test = new System(system_width, system_height, system_gridlength);
 
 	createVertexBuffer();
 	setUpVertexAttributes();
@@ -215,12 +239,12 @@ int main() {
 	GLuint programID = LoadShaders(vertexShaderFile, fragmentShaderFile);
 
 	//----------- Perspective stuff ----------------
-	glm::mat4 mvp = generateMVPmatrix();
+	//glm::mat4 mvp = generateMVPmatrix();
 	// get handle for "MVP" uniform -- only during initialization
 	//MatrixID = glGetUniformLocation(programID, "MVP");
 
 	textureName = glGetUniformLocation(programID, "myTexture");
-
+	glUniform1i(textureName, 0);
 
 	prevTime = glfwGetTime();
 
@@ -235,10 +259,11 @@ int main() {
 		// done in main loop since each model will have different MVP (at least for M part)
 		//glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
+		test->update(currTime - prevTime);
+		render(test->getHeightMap());
 
-		// You draw here, but there's nothing lol
-		render();
-
+		//std::cout << "time " << currTime - prevTime << std::endl;
+		prevTime = currTime;
 		// Swap buffers
 		glfwSwapBuffers(window);
 
@@ -251,6 +276,8 @@ int main() {
 	cleanUp();
 
 	glDeleteProgram(programID);
+
+	delete test;
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();

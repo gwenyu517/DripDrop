@@ -41,7 +41,7 @@ bool Particle::isStatic() {
 }
 
 bool Particle::isResidual() {
-	return timeSinceLastResidual == 0.0;
+	return timeSinceLastResidual == 0.0 && mass <= mass_static;
 }
 
 glm::vec2 Particle::getPosition() {
@@ -76,6 +76,10 @@ std::vector<glm::vec2> Particle::getHemispherePositions() {
 	return q;
 }
 
+std::unordered_set<int> Particle::getListOfOccupiedCells() {
+	return occupiedCells;
+}
+
 void Particle::setPosition(glm::vec2 p) {
 	position = p;
 }
@@ -96,4 +100,16 @@ void Particle::addHemispherePosition(glm::vec2 p) {
 
 void Particle::clearHemispherePositions() {
 	q.clear();
+}
+
+void Particle::addOccupiedCells(int index) {
+	occupiedCells.insert(index);
+}
+
+void Particle::addOccupiedCells(std::unordered_set<int> list) {
+	occupiedCells.insert(list.begin(), list.end());
+}
+
+void Particle::removeOccupiedCells(int index) {
+	occupiedCells.erase(index);
 }

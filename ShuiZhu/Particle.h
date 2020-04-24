@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <unordered_set>
 
 /* particles have
  * 		position
@@ -30,6 +31,7 @@ private:
 	float density = 1.0f;
 	float radius;
 	std::vector<glm::vec2> q;
+	std::unordered_set<int> occupiedCells;
 
 public:
 	//Particle();
@@ -51,6 +53,7 @@ public:
 	float getRadius();
 	float getDensity();
 	std::vector<glm::vec2> getHemispherePositions();
+	std::unordered_set<int> getListOfOccupiedCells();
 
 	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
@@ -58,6 +61,10 @@ public:
 	void setRadius(float r);
 	void addHemispherePosition(glm::vec2 p);
 	void clearHemispherePositions();
+	void addOccupiedCells(int index);
+	void addOccupiedCells(std::unordered_set<int> list);
+	void removeOccupiedCells(int index);
+
 
 };
 
