@@ -27,7 +27,7 @@ private:
 	float mass;
 	double timeSinceLastResidual;
 	float mass_static =  0.000050f;
-	double maxResidualTime = 0.4;
+	double maxResidualTime = 10.0;//0.4;
 	float density = 1.0f;
 	float radius;
 	std::vector<glm::vec2> q;

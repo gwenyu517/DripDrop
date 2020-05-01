@@ -9,6 +9,9 @@ uniform sampler2D myTexture;
 void main() {
 //	color = vec3(0,1,0);
 //	color = texture(myTexture, UV).rgb;
+
+	// default framebuffer clamps [0,1]
+
 	float val = texture(myTexture, UV).r;
 	if (val > 0)
 		color = vec3(0, 0, 0);

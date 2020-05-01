@@ -1,5 +1,6 @@
 #include "Particle.h"
 #include <algorithm>
+#include <iostream>
 
 /*Particle::Particle() {
 
@@ -32,8 +33,15 @@ bool Particle::leaveResidual(int beta, double dt) {
 	// input needed is t_max_residualTime, dt, and timeSinceLastResidual
 	// they set beta = 3, and dt <= t_max / 3, with t_max = 0.4
 
+
+
 	double a = beta * (dt/maxResidualTime) * std::min(1.0, timeSinceLastResidual/maxResidualTime);
-	return std::min(1.0, a);
+	//std::cout << "a is " << a << std::endl;
+	double probability = std::min(1.0, a);
+
+// you need to use the probability dumb dumb lol
+
+	return false;
 }
 
 bool Particle::isStatic() {
@@ -41,7 +49,7 @@ bool Particle::isStatic() {
 }
 
 bool Particle::isResidual() {
-	return timeSinceLastResidual == 0.0 && mass <= mass_static;
+	return (timeSinceLastResidual == 0.0) && (mass <= mass_static);
 }
 
 glm::vec2 Particle::getPosition() {
