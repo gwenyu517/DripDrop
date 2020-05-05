@@ -66,7 +66,6 @@ System::System(float width, float height, float gridLength) :
 	  float py = height/2.0f;
 	  float mass = 0.00008f;	// 0.00005f;
 	  particleList.insert({0, new Particle(glm::vec2(px, py), mass)});
-	  height_map[index(glm::vec2(px,py))] = 10.0f;
 
 	  std::cout << "set up position = " << px << ", " << py << std::endl;
 	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
@@ -129,6 +128,7 @@ void System::updateVelocity(double dt) {
 			default:
 				break;
 		}
+		//p->setVelocity(velocity*0.1f);
 		p->setVelocity(velocity*0.75f);
 		//p->setVelocity(velocity);	// velocity is in reality
 	}
@@ -334,7 +334,7 @@ void System::updateHeightMap() {
 	assignDropletShapes();
 	constructNewHeightMap();
 	smoothHeightMap();
-	//erodeHeightMap();
+	erodeHeightMap();
 }
 
 void System::assignDropletShapes() {
@@ -502,13 +502,14 @@ void System::smoothHeightMap() {
  * if height < e_h, height = 0 --> e_h = 0.01
  */
 	//std::cout <<"\nSMOOTH SON, SMOOTH" << std::endl;
-	float* h_map = height_map;
+	float* h_map = new float[MAP_SIZE];
 
 	for (int i = 0; i < MAP_WIDTH; i++) {
 		for (int j = 0; j < MAP_HEIGHT; j++) {
 			float sum = height_map[index(i-1, j+1)] + height_map[index(i, j+1)] + height_map[index(i+1, j+1)]
 					  + height_map[index(i-1, j)]   + height_map[index(i, j)]   + height_map[index(i+1, j)]
 					  + height_map[index(i-1, j-1)] + height_map[index(i, j-1)] + height_map[index(i+1, j-1)];
+
 			h_map[index(i,j)] = sum / 9.0f;
 
 			if (h_map[index(i,j)] < E_H) {
@@ -520,6 +521,7 @@ void System::smoothHeightMap() {
 			}
 		}
 	}
+	delete height_map;
 	height_map = h_map;
 	//std::cout << "DONE SMOOTH" << std::endl;
 }
@@ -534,7 +536,7 @@ void System::erodeHeightMap() {
  * 			change boundary grid height to 0
  */
 	std::cout << "\nERODE" << std::endl;
-	float* h_map = height_map;
+	float* h_map = new float[MAP_SIZE];
 
 	for (int i = 0; i < MAP_WIDTH; i++) {
 		for (int j = 0; j < MAP_HEIGHT; j++) {
@@ -548,28 +550,38 @@ void System::erodeHeightMap() {
 					id_map[index(i,j)] = -1;
 					particleList[id]->removeOccupiedCells(index(i,j));
 				}
+
 				// shift height inwards
 				// 		first find the neighboring grid with the greatest height
 				int gridWithGreatestHeight = index(i-1,j-1);
+				glm::ivec2 gwgh(i-1,j-1);
 				//std::cout << "grid with greatest height = " << gridWithGreatestHeight << std::endl;
 				for (int m = -1; m <= 1; m++) {
 					for (int n = -1; n <= 1; n++) {
 						if (m == 0 && n == 0)
 							continue;
 						if (height_map[index(i+m, j+n)]
-									   >= height_map[gridWithGreatestHeight])
+									   >= height_map[gridWithGreatestHeight]) {
 							gridWithGreatestHeight = index(i+m, j+n);
+							gwgh = glm::ivec2(i+m,j+n);
+						}
 					}
 				}
+				std::cout << id << " " << i << ", " << j << " --> " << gwgh.x << ", " << gwgh.y << std::endl;
+
 				// then change height values
 				// should we also shift ids?? for now, no.
 				h_map[gridWithGreatestHeight] = height_map[index(i,j)];
-				h_map[index(i,j)] = 0.0f;
+				h_map[index(i,j)] = 0.0f;		// why???
+
 			}
+			else
+				h_map[index(i,j)] = height_map[index(i,j)];;
 
 		}
 	}
 
+	delete height_map;
 	height_map = h_map;
 	std::cout << "DONE ERODE" << std::endl;
 }
