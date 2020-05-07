@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <cmath>
 
 //GLEW must be included before GLUT or GLFW
 #define GLEW_STATIC
@@ -58,7 +59,7 @@ static GLubyte pixels_test[] = {
 // NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
 float system_width = 0.3f;
 float system_height = 0.3f;
-float system_gridlength = 0.01f;
+float system_gridlength = 0.001f;
 //float* system_heightMap;
 
 glm::mat4 generateMVPmatrix() {
@@ -137,8 +138,8 @@ void createTexture() {
 			GL_TEXTURE_2D,		// target
 			0, 					// level
 			GL_R32F,					// internal format
-			(int)(system_width/system_gridlength),					// width
-			(int)(system_height/system_gridlength),					// height
+			(int)std::round(system_width/system_gridlength),					// width
+			(int)std::round(system_height/system_gridlength),					// height
 			0,					// border
 			GL_RED,					// format
 			GL_FLOAT,			// type
@@ -165,8 +166,8 @@ void render(float* data) {
 			0,					// level
 			0,					// xoffset
 			0,					// yoffset
-			(int)(system_width/system_gridlength),	// width
-			(int)(system_height/system_gridlength),	// height
+			(int)std::round(system_width/system_gridlength),	// width
+			(int)std::round(system_height/system_gridlength),	// height
 			GL_RED,				// format
 			GL_FLOAT,			// type
 			data
@@ -226,7 +227,7 @@ int main() {
 	// Ensure we can capture the escape key being pressed later
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
 	// width, height = 0.3
 	// grid length = 0.01
@@ -247,6 +248,10 @@ int main() {
 	glUniform1i(textureName, 0);
 
 	prevTime = glfwGetTime();
+	float meh = system_width/system_gridlength;
+	std::cout << meh << std::endl;
+	std::cout << (int)meh << std::endl;
+	std::cout << (int)(system_width/system_gridlength) << std::endl;
 
 	do {
 		currTime = glfwGetTime();

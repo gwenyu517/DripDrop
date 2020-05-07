@@ -14,8 +14,8 @@ void main() {
 
 	float val = texture(myTexture, UV).r;
 	if (val > 0)
-		color = vec3(0, 0, 0);
+		color = vec3(1, 1, 1);
 	else
-		color = vec3(1,1,1);
+		color = vec3(0,0,0);
 	
 }

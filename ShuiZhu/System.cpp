@@ -4,7 +4,9 @@
 #include <iterator>
 #include <algorithm>
 
+#include <cmath>	// std::nextafter, std::round
 #include <iostream>	// for debug lol
+
 
 #define GRAVITY 9.80665f
 #define PI 3.14159265359f
@@ -20,9 +22,13 @@
 
 // System::System(){}
 
+unsigned long affinitySeed = 2117095920;
+
 System::System(float width, float height, float gridLength) :
-	MAP_WIDTH((int)(width/gridLength)),
-	MAP_HEIGHT((int)(height/gridLength)),
+//	MAP_WIDTH((int)(width/gridLength)),
+//	MAP_HEIGHT((int)(height/gridLength)),
+	MAP_WIDTH((int)std::round((width/gridLength))),
+	MAP_HEIGHT((int)std::round((height/gridLength))),
 	MAP_SIZE(MAP_WIDTH * MAP_HEIGHT),
 	GRID_LENGTH(gridLength)
 {
@@ -34,23 +40,28 @@ System::System(float width, float height, float gridLength) :
 
 	// mersenne_twister_engine with seed from system clock
 	//		(http://www.cplusplus.com/reference/random/mersenne_twister_engine/mersenne_twister_engine/)
+	//affinitySeed = std::chrono::system_clock::now().time_since_epoch().count();
+	//std::mt19937 generator(affinitySeed);
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
-	std::uniform_int_distribution<int> affinity_distribution(1, 10000);
+	std::uniform_real_distribution<float> affinity_distribution(0.0, std::nextafter(1.0,2.0));
 	for (int i = 0; i < MAP_SIZE; i++) {
 		id_map[i] = -1;
 		height_map[i] = 0.0f;
 		// https://stackoverflow.com/questions/48716109/generating-a-random-number-between-0-1-c/48716227
 		// https://codeforces.com/blog/entry/61587
 		// https://onedrive.live.com/view.aspx?resid=E66E02DC83EFB165!312&cid=e66e02dc83efb165&lor=shortUrl
-		affinity_map[i] = (float)affinity_distribution(generator) / 10000.0f ;		// random between [0,1]
+		affinity_map[i] = affinity_distribution(generator);	// random between [0,1]
 	}
 
 	  int intervals[3] = {0, 500000, 1000000};
 	  int weights[2] = {8, 2};
 	  std::piecewise_constant_distribution<double>
 	    mass_distribution (std::begin(intervals),std::end(intervals),std::begin(weights));
-	  std::uniform_int_distribution<int> px_distribution(0, MAP_WIDTH - 1);
-	  std::uniform_int_distribution<int> py_distribution(0, MAP_HEIGHT - 1);
+
+	  //std::uniform_int_distribution<int> px_distribution(0, MAP_WIDTH - 1);
+	  //std::uniform_int_distribution<int> py_distribution(0, MAP_HEIGHT - 1);
+	  std::uniform_real_distribution<float> px_distribution(0.0, width);
+	  std::uniform_real_distribution<float> py_distribution(0.0, height);
 	// default to 10 water particles
 /*	for (int i = 0;i < 10; i++) {
 		// approximately 80% of newly created masses are less than m_static
@@ -67,14 +78,18 @@ System::System(float width, float height, float gridLength) :
 	  float mass = 0.00008f;	// 0.00005f;
 	  particleList.insert({0, new Particle(glm::vec2(px, py), mass)});
 
-	  std::cout << "set up position = " << px << ", " << py << std::endl;
+	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
 	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
 	  std::cout << "mass <= 0.000050f? " << (mass <= 0.000050f) << std::endl;
 
+
 	  update(0.0);
+	  //height_map[index(glm::vec2(px,py))] = 100.0f; // left, mid height
+	  //height_map[45000] = 100.0f;						// center
 }
 
 System::~System() {
+	std::cout << "Destructor" << std::endl;
 	delete [] id_map;
 	delete [] height_map;
 	delete [] affinity_map;
@@ -85,18 +100,20 @@ float* System::getHeightMap() {
 }
 
 void System::update(double dt) {
-	std::cout << "_______________________________" << std::endl;
+	std::cout << "___________" << affinitySeed << "____________________" << std::endl;
 	// something is wrong with updateHeightMap
+	std::cout << "dtboi: " << dt << std::endl;
 	updateVelocity(dt);
 	updatePosition(dt);
 	leaveResidualDroplets(dt);
 	updateHeightMap();
 	//mergeDroplets();
-	//std::cout << "DONE" << std::endl;
+	std::cout << "DONE" << std::endl;
 }
 
 void System::updateVelocity(double dt) {
 	// std::unordered_map<int, Particle>::iterator, for future me's curiosity
+	std::cout << "UPDATE VELOCITY " ;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle* p = i->second;
 
@@ -129,7 +146,8 @@ void System::updateVelocity(double dt) {
 				break;
 		}
 		//p->setVelocity(velocity*0.1f);
-		p->setVelocity(velocity*0.75f);
+		p->setVelocity(velocity*0.8f);
+		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
 		//p->setVelocity(velocity);	// velocity is in reality
 	}
 	//std::cout << " **************************** I HAVE " << particleList.size() << " PARTICLES" << std::endl;
@@ -184,6 +202,7 @@ System::Region System::determineDirectionOfMovement(Particle* p) {
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 	std::uniform_int_distribution<int> distribution(2, 4);
 	Region randomDOM = (Region)distribution(generator);
+	std::cout << "direction " << (int)randomDOM << std::endl;
 	return randomDOM;
 }
 
@@ -267,6 +286,7 @@ float System::sumOf(glm::vec2 position, Region region, Attrib attrib) {
 }
 
 void System::updatePosition(double dt) {
+	std::cout <<"\nUPDATE POSITION ";
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle* p = i->second;
 
@@ -288,6 +308,7 @@ void System::updatePosition(double dt) {
 		//std::cout << "\nNEW POSITION" << std::endl;
 		//std::cout << position.x << ", " << position.y << std::endl;
 		p->setPosition(position);
+		std::cout << "(" << position.x << ", " << position.y;
 	}
 }
 
@@ -305,15 +326,16 @@ void System::leaveResidualDroplets(double dt) {
 	 * 	else
 	 * 		curr particle.timeSinceLastResidual += dt
 	 */
-	//std::cout << "\nLEAVE RESIDUAL?" << std::endl;
+	std::cout << "\nLEAVE RESIDUAL?" << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle* p = i->second;
 		if (p->isStatic())
 			continue;			// do you need to reset residual time??
 		if (p->leaveResidual(BETA, dt)) {
 			std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
-			std::uniform_int_distribution<int> distribution(100000, 300000);
-			float a = distribution(generator) / 1000000.0f;
+			std::uniform_real_distribution<float> distribution(0.1, std::nextafter(0.3,1.0));
+			float a = distribution(generator);
+			std::cout << "a = " << a << std::endl;
 			float np_mass = std::min(p->getMass_static(), a * p->getMass());
 			glm::vec2 np_position = p->getPosition();
 
@@ -335,6 +357,7 @@ void System::updateHeightMap() {
 	constructNewHeightMap();
 	smoothHeightMap();
 	erodeHeightMap();
+	//std::cout << "End of updateHeightBoi" << std::endl;
 }
 
 void System::assignDropletShapes() {
@@ -353,15 +376,16 @@ void System::assignDropletShapes() {
 	 *			otherwise, the particle should have old q positions for reuse
 	 */
 
-	//std::cout << "\nASSIGN DROPLET SHAPE" << std::endl;
+	std::cout << "\nASSIGN DROPLET SHAPE" << std::endl;
 
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle* p = i->second;
-		//std::cout << "is static? " << p->isStatic() << std::endl;
+		std::cout << "is static? " << p->isStatic() << std::endl;
 		//std::cout << "mass = " << p->getMass() << std::endl;
 
 		if (p->isStatic()) {
 			int n = p->getHemispherePositions().size();
+			std::cout << "n = " << n << " sphere positions" << std::endl;
 			//std::cout << "number of existing sphere positions = " << n << std::endl;
 			// if particle is newly static, fill in N[1,5] hemisphere positions
 			// else, reuse previous positions
@@ -369,11 +393,12 @@ void System::assignDropletShapes() {
 				std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 				std::uniform_int_distribution<int> distribution(1, 5);
 				n = distribution(generator);
-				//std::cout << "add " << n << " sphere positions" << std::endl;
+				std::cout << "n = " << n << " sphere positions" << std::endl;
 				glm::vec2 q(p->getPosition());
 				p->addHemispherePosition(q);
 				for (int i = 0; i < n - 1; i++) {
 					Region direction = (Region)distribution(generator);
+					std::cout << "sphere at " << (int)direction << std::endl;
 					switch(direction) {
 						case Region::L :
 							q += glm::vec2(-GRID_LENGTH, 0);
@@ -425,7 +450,7 @@ void System::constructNewHeightMap() {
 	 *  			set ID
 	 *  		else, continue
 	 */
-	//std::cout << "\nCONSTRUCT HEIGHT MAP" << std::endl;
+	std::cout << "\nCONSTRUCT HEIGHT MAP" << std::endl;
 
 	for (auto p = particleList.begin(); p != particleList.end(); p++) {
 		Particle* particle = p->second;
@@ -441,11 +466,10 @@ void System::constructNewHeightMap() {
 		int n = hemispherePositions.size();
 
 		// if moving particle
-		//... particle moves down once and then starts moving up lolol
-		// not position's fault, position is correct --> indexing?
 		if (n == 0) {
 			glm::vec2 particle_position = particle->getPosition();
-			//std::cout << "moving particle position (" << particle_position.x << ", " << particle_position.y << ")" << std::endl;
+			std::cout << "moving particle position (" << particle_position.x << ", " << particle_position.y << ")" << std::endl;
+			std::cout << "r = " << r << std::endl;
 			int x0 = (int)((particle_position.x - r) / GRID_LENGTH);
 			int x1 = (int)((particle_position.x + r) / GRID_LENGTH);
 			int y0 = (int)((particle_position.y - r) / GRID_LENGTH);
@@ -457,7 +481,7 @@ void System::constructNewHeightMap() {
 			for (int i = x0; i <= x1; i++) {
 				for (int j = y0; j <= y1; j++) {
 					// h in actual terms
-					//std::cout << "inspect index " << index(i,j) << std::endl;
+					//std::cout << "inspect index " << 	i,j) << std::endl;
 					float h = r*r - glm::distance(position(i,j), particle_position)*glm::distance(position(i,j), particle_position);
 					if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
 						height_map[index(i,j)] = glm::sqrt(h);
@@ -496,35 +520,43 @@ void System::constructNewHeightMap() {
 	}
 	//std::cout << "NEW HEIGHT MAP MADE" << std::endl;
 }
+
 void System::smoothHeightMap() {
 /*
  * height of every cell = height of (surrounding 8 neighbors + itself) / 9
  * if height < e_h, height = 0 --> e_h = 0.01
  */
-	//std::cout <<"\nSMOOTH SON, SMOOTH" << std::endl;
+	std::cout <<"\nSMOOTH SON, SMOOTH";
 	float* h_map = new float[MAP_SIZE];
+//	std::cout << "Initialized h_map" << std::endl;
 
 	for (int i = 0; i < MAP_WIDTH; i++) {
 		for (int j = 0; j < MAP_HEIGHT; j++) {
+
+//			h_map[index(i,j)] = height_map[index(i,j)];
 			float sum = height_map[index(i-1, j+1)] + height_map[index(i, j+1)] + height_map[index(i+1, j+1)]
 					  + height_map[index(i-1, j)]   + height_map[index(i, j)]   + height_map[index(i+1, j)]
 					  + height_map[index(i-1, j-1)] + height_map[index(i, j-1)] + height_map[index(i+1, j-1)];
-
+//			std::cout << "Sum" << std::endl;
+//			std::cout << "index hmap" << (index(i, j) >= MAP_SIZE) << std::endl;
 			h_map[index(i,j)] = sum / 9.0f;
-
 			if (h_map[index(i,j)] < E_H) {
 				h_map[index(i,j)] = 0.0f;
 				if (id_map[index(i,j)] != -1) {
+//					std::cout << "idmap" << (index(i, j) >= MAP_SIZE) << std::endl;
 					particleList[id_map[index(i,j)]]->removeOccupiedCells(index(i,j));
 					id_map[index(i,j)] = -1;
 				}
 			}
+//			std::cout << "indexed idmap" << std::endl;
 		}
 	}
+
 	delete height_map;
 	height_map = h_map;
 	//std::cout << "DONE SMOOTH" << std::endl;
 }
+
 void System::erodeHeightMap() {
 /*
  * if boundary grid cell (h(x,y) > 0 while neighboring cell has height = 0)
@@ -543,7 +575,9 @@ void System::erodeHeightMap() {
 			int id = id_map[index(i,j)];
 
 			// if is boundary cell and not in residual droplet
+
 			if (isBoundaryCell(i,j)) {
+//				std::cout << "die" << std::endl;
 				if (id != -1) {
 					if (particleList[id]->isResidual())
 						continue;
@@ -554,36 +588,38 @@ void System::erodeHeightMap() {
 				// shift height inwards
 				// 		first find the neighboring grid with the greatest height
 				int gridWithGreatestHeight = index(i-1,j-1);
-				glm::ivec2 gwgh(i-1,j-1);
-				//std::cout << "grid with greatest height = " << gridWithGreatestHeight << std::endl;
+
 				for (int m = -1; m <= 1; m++) {
 					for (int n = -1; n <= 1; n++) {
 						if (m == 0 && n == 0)
 							continue;
 						if (height_map[index(i+m, j+n)]
-									   >= height_map[gridWithGreatestHeight]) {
+									   >= height_map[gridWithGreatestHeight])
 							gridWithGreatestHeight = index(i+m, j+n);
-							gwgh = glm::ivec2(i+m,j+n);
-						}
+
 					}
 				}
-				std::cout << id << " " << i << ", " << j << " --> " << gwgh.x << ", " << gwgh.y << std::endl;
 
 				// then change height values
 				// should we also shift ids?? for now, no.
 				h_map[gridWithGreatestHeight] = height_map[index(i,j)];
-				h_map[index(i,j)] = 0.0f;		// why???
+				h_map[index(i,j)] = 0.0f;
 
 			}
-			else
+			else {
+				//std::cout << "eh" << std::endl;
 				h_map[index(i,j)] = height_map[index(i,j)];;
+			}
 
 		}
 	}
-
+	//std::cout << "baby good night" << std::endl;
+	//std::cout << "pls sir" << std::endl;
 	delete height_map;
+
+	//std:: cout << "after delete height map" << std::endl;
 	height_map = h_map;
-	std::cout << "DONE ERODE" << std::endl;
+	//std::cout << "Finished erodeHeightBOi" << std::endl;
 }
 
 bool System::isBoundaryCell(int i, int j) {
@@ -597,6 +633,7 @@ bool System::isBoundaryCell(int i, int j) {
 	}
 	return false;
 }
+
 void System::mergeDroplets() {
 /*...I...I might just brute force this...I don't know enough about collision detection...
  * hm...checking bottom up... you check 4 neighbors (TL, T, TR, R), ignoring the 4 "behind you" since you already checked those relations
@@ -740,13 +777,18 @@ int System::index(glm::vec2 pos) {
 
 	if (p.x < 0)
 		p.x = (p.x % MAP_WIDTH) + MAP_WIDTH;
-	else if (p.x >= MAP_WIDTH)
+	if (p.x >= MAP_WIDTH)
 		p.x = p.x % MAP_WIDTH;
 
 	if (p.y < 0)
 		p.y = (p.y % MAP_HEIGHT) + MAP_HEIGHT;
-	else if (p.y >= MAP_HEIGHT)
+	if (p.y >= MAP_HEIGHT)
 		p.y = p.y % MAP_HEIGHT;
+
+	if (p.y*MAP_WIDTH + p.x > MAP_SIZE-1)
+		std::cout << "ya weirdo " << p.x << ", " << p.y << std::endl;
+
+	//std::cout << "anywho " << p.x << ", " << p.y << " = " << (p.y*MAP_WIDTH + p.x) << " ??? " << MAP_SIZE-1 << " " << MAP_WIDTH << " " << MAP_HEIGHT << std::endl;
 
 	return p.y*MAP_WIDTH + p.x;
 }
@@ -754,13 +796,18 @@ int System::index(glm::vec2 pos) {
 int System::index(int x, int y) {
 	if (x < 0)
 		x = (x % MAP_WIDTH) + MAP_WIDTH;
-	else if (x >= MAP_WIDTH)
+	if (x >= MAP_WIDTH)
 		x = x % MAP_WIDTH;
 
 	if (y < 0)
 		y = (y % MAP_HEIGHT) + MAP_HEIGHT;
-	else if (y >= MAP_HEIGHT)
+	if (y >= MAP_HEIGHT)
 		y = y % MAP_HEIGHT;
+
+	//std::cout << "anywho " << x << ", " << y << " = " << (y*MAP_WIDTH + x) << " ??? " << MAP_SIZE-1 << " " << MAP_WIDTH << " " << MAP_HEIGHT << std::endl;
+
+	if ((y*MAP_WIDTH + x) > MAP_SIZE-1)
+			std::cout << "ya weirdo " << x << ", " << y << " = " << (y*MAP_WIDTH + x) << " ??? " << MAP_SIZE-1 << " " << MAP_WIDTH << " " << MAP_HEIGHT << std::endl;
 
 	return y*MAP_WIDTH + x;
 }

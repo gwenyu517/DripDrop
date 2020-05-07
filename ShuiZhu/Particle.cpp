@@ -10,7 +10,7 @@ Particle::Particle(glm::vec2 p, float m) {
 	velocity = glm::vec2(0,0);
 	timeSinceLastResidual = 0.0;
 	mass = m;
-
+	radius = 0.0f;
 }
 
 Particle::~Particle() {
