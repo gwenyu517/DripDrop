@@ -6,29 +6,15 @@
 #include <vector>
 #include <unordered_set>
 
-/* particles have
- * 		position
- * 		mass
- * 		velocity
- * 		ID
- * 		time elapsed since previous residual water drop created
- *
- *
- * 		reset time elapsed()
- * 		bool leaveResidual()
- *		bool isStatic()
- *		bool isResidual()
- */
-
 class Particle {
 private:
 	glm::vec2 position;
 	glm::vec2 velocity;
 	float mass;
 	double timeSinceLastResidual;
-	float mass_static =  0.000050f;
+	static float mass_static;	// grams
 	double maxResidualTime = 10.0;//0.4;
-	float density = 1.0f;
+	static float density;
 	float radius;
 	std::vector<glm::vec2> q;
 	std::unordered_set<int> occupiedCells;
@@ -47,17 +33,18 @@ public:
 	glm::vec2 getPosition();
 	glm::vec2 getVelocity();
 	float getMass();
-	float getMass_static();
+	static float getMass_static();
 	double getMaxResidualTime();
 	double getTimeSinceLastResidual();
 	float getRadius();
-	float getDensity();
+	static float getDensity();
 	std::vector<glm::vec2> getHemispherePositions();
 	std::unordered_set<int> getListOfOccupiedCells();
 
 	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
 	void setMass(float m);
+	static void setMass_static(float m);
 	void setRadius(float r);
 	void addHemispherePosition(glm::vec2 p);
 	void clearHemispherePositions();

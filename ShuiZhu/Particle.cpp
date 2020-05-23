@@ -1,15 +1,26 @@
 #include "Particle.h"
 #include <algorithm>
 #include <iostream>
+//#include <glm/gtc/constants.hpp>
+
 
 /*Particle::Particle() {
 
 }*/
+
+//const float Particle::mass_static =  0.05f;
+
+//const float PI = 3.14159265359f;
+
+float Particle::mass_static =  1.0f;
+float Particle::density = 1.0f;
+
 Particle::Particle(glm::vec2 p, float m) {
 	position = p;
 	velocity = glm::vec2(0,0);
 	timeSinceLastResidual = 0.0;
 	mass = m;
+	//mass_static =
 	radius = 0.0f;
 }
 
@@ -96,6 +107,10 @@ void Particle::setVelocity(glm::vec2 v) {
 }
 void Particle::setMass(float m) {
 	mass = m;
+}
+
+void Particle::setMass_static(float m) {
+	mass_static = m;
 }
 
 void Particle::setRadius(float r) {

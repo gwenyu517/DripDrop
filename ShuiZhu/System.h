@@ -32,10 +32,13 @@ private:
 	enum class Region{L = 1, BL, B, BR, R, TR, T, TL};
 	enum class Attrib{water, affinity};
 
+	const float GRID_LENGTH;
 	const int MAP_WIDTH;
 	const int MAP_HEIGHT;
 	const int MAP_SIZE;
-	const float GRID_LENGTH;
+
+	float minDropletMass;
+	float maxDropletMass;
 
 	int* id_map;	//hm...well if they overlap they were gonna merge anyway and they're
 					// probably right next to each other anyway so just check if they're
@@ -63,6 +66,9 @@ private:
 
 	Region determineDirectionOfMovement(Particle* p);
 	float sumOf(glm::vec2 pos, Region region, Attrib attrib);
+
+
+	void check();
 
 public:
 	//System();

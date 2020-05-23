@@ -57,9 +57,9 @@ static GLubyte pixels_test[] = {
 */
 
 // NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
-float system_width = 0.3f;
-float system_height = 0.3f;
-float system_gridlength = 0.001f;
+float system_width = 2.0f;	// cm
+float system_height = 2.0f;	// cm
+float system_gridlength = 0.05f;
 //float* system_heightMap;
 
 glm::mat4 generateMVPmatrix() {
