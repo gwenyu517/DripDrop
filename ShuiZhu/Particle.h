@@ -11,11 +11,15 @@ private:
 	glm::vec2 position;
 	glm::vec2 velocity;
 	float mass;
-	double timeSinceLastResidual;
-	static float mass_static;	// grams
-	double maxResidualTime = 10.0;//0.4;
-	static float density;
 	float radius;
+	double timeSinceLastResidual;
+
+	static float mass_static;	// grams
+	double maxResidualTime = 0.4;
+	int beta = 3;
+	static float density;
+
+
 	std::vector<glm::vec2> q;
 	std::unordered_set<int> occupiedCells;
 
@@ -26,7 +30,7 @@ public:
 
 	void resetTimeSinceLastResidual();
 	void addResidualTime(double dt);
-	bool leaveResidual(int beta, double dt);
+	bool leaveResidual(double dt, float chance);
 	bool isStatic();
 	bool isResidual();
 

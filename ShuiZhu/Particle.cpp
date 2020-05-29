@@ -36,7 +36,7 @@ void Particle::addResidualTime(double dt) {
 	timeSinceLastResidual += dt;
 }
 
-bool Particle::leaveResidual(int beta, double dt) {
+bool Particle::leaveResidual(double dt, float chance) {
 	// probability of leaving drop at current time step =
 	// min(1,
 	//   beta * (dt / t_max_residualTime) *
@@ -50,9 +50,7 @@ bool Particle::leaveResidual(int beta, double dt) {
 	//std::cout << "a is " << a << std::endl;
 	double probability = std::min(1.0, a);
 
-// you need to use the probability dumb dumb lol
-
-	return false;
+	return (chance <= probability);
 }
 
 bool Particle::isStatic() {

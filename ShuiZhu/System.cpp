@@ -6,6 +6,7 @@
 
 #include <cmath>	// std::nextafter, std::round
 #include <iostream>	// for debug lol
+#include <iomanip>
 
 
 const float GRAVITY = 980.665f;	// cm/s^2
@@ -32,6 +33,7 @@ System::System(float width, float height, float gridLength) :
 	MAP_HEIGHT((int)std::round((height/GRID_LENGTH))),
 	MAP_SIZE(MAP_WIDTH * MAP_HEIGHT)
 {
+	std::cout << std::setprecision(16);
 	id_map = new int[MAP_SIZE];
 	height_map = new float[MAP_SIZE];
 	affinity_map = new float[MAP_SIZE];
@@ -92,11 +94,11 @@ System::System(float width, float height, float gridLength) :
 	  std::cout << "max = " << maxDropletMass << std::endl;
 
 	  // mass_static --> N=1 gives r = 0.509096..., N=5 gives r = 0.297721...
-	  Particle::setMass_static(0.028);
+	  Particle::setMass_static(0.028f);	// plot twist: float precision problems, 0.028 is actually 0.028......864267....etc.
 	  std::cout << "stat = " << Particle::getMass_static() << std::endl;
 
 			  //glm::pow(10,-5) / (3 * PI * (particleList.begin()->second)->getDensity());
-	  	 (particleList.begin()->second)->setMass(0.027);
+	  	 (particleList.begin()->second)->setMass(0.03);
 
 	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
 	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
@@ -104,9 +106,10 @@ System::System(float width, float height, float gridLength) :
 
 
 
-	  //update(0.0);
-	  height_map[index(glm::vec2(px,py))] = 100.0f;
+	  update(0.0);
+	  //height_map[index(glm::vec2(px,py))] = 100.0f;
 	  //height_map[45000] = 100.0f;						// center
+
 }
 
 System::~System() {
@@ -130,7 +133,7 @@ void System::update(double dt) {
 	updateHeightMap();
 	//mergeDroplets();
 	std::cout << "DONE" << std::endl;
-	check();
+	//check();
 }
 
 void System::check(){
@@ -158,10 +161,12 @@ void System::updateVelocity(double dt) {
 		float f_friction = p->getMass_static() * GRAVITY;					// keep in mind that this assumes gravity points
 		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
 		glm::vec2 acceleration = glm::vec2(0, f_friction - f_gravity) / p->getMass();		// straight down
-		//std::cout << "acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
+		std::cout << "acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
 		glm::vec2 velocity = p->getVelocity() + acceleration * (float)dt;
-		//std::cout << "velocity = " << velocity.x << ", " << velocity.y << std::endl;
-		float speed = glm::distance(velocity, glm::vec2(0,0));
+		std::cout << "velocity waaaas = " << p->getVelocity().x << ", " << p->getVelocity().y << std::endl;
+		std::cout << "acceleration * v.x? " << (acceleration.x * p->getVelocity().x) << std::endl;
+		std::cout << "velocity = " << velocity.x << ", " << velocity.y << std::endl;
+		float speed = glm::length(velocity);
 
 	//	check 3 region's water amount, then affinity, then random
 	// 		return random w (or speed * random w)
@@ -169,21 +174,25 @@ void System::updateVelocity(double dt) {
 
 		switch(determineDirectionOfMovement(p)) {
 			case Region::BL :
+				std::cout << "       BL" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(-1, -1));
 				break;
 			case Region::B 	:
+				std::cout << "       B" << std::endl;
 				velocity = speed * glm::vec2(0, -1);
 				break;
 			case Region::BR :
+				std::cout << "       BR" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(1, -1));
 				break;
 			default:
 				break;
 		}
 		//p->setVelocity(glm::vec2(0,0));
-		p->setVelocity(velocity*0.25f);
+//		p->setVelocity(velocity*0.5f);
+		p->setVelocity(velocity);	// velocity is in reality
 		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
-		//p->setVelocity(velocity);	// velocity is in reality
+
 	}
 	//std::cout << " **************************** I HAVE " << particleList.size() << " PARTICLES" << std::endl;
 }
@@ -208,7 +217,11 @@ System::Region System::determineDirectionOfMovement(Particle* p) {
 		max = br;
 		directionOfMovement = Region::BR;
 	}
+	std::cout << "     bl = " << bl << std::endl;
+	std::cout << "     b  = " << b << std::endl;
+	std::cout << "     br = " << br << std::endl;
 
+//	std::cout << "dom " << (int)directionOfMovement << ", with sum " << max << std::endl;
 	if (max > 0.0f)
 		return directionOfMovement;
 
@@ -229,6 +242,8 @@ System::Region System::determineDirectionOfMovement(Particle* p) {
 		max = br;
 		directionOfMovement = Region::BR;
 	}
+
+//	std::cout << "dom " << (int)directionOfMovement << ", with affinity " << max << std::endl;
 
 	if (max > 0.0f)
 		return directionOfMovement;
@@ -366,8 +381,10 @@ void System::leaveResidualDroplets(double dt) {
 		Particle* p = i->second;
 		if (p->isStatic())
 			continue;			// do you need to reset residual time??
-		if (p->leaveResidual(BETA, dt)) {
-			std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
+		std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
+		std::uniform_real_distribution<float> chance(0.0, std::nextafter(1.0,2.0));
+		if (p->leaveResidual(dt, chance(generator))) {
+//			std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 			std::uniform_real_distribution<float> distribution(0.1, std::nextafter(0.3,1.0));
 			float a = distribution(generator);
 			std::cout << "a = " << a << std::endl;
@@ -390,7 +407,7 @@ void System::updateHeightMap() {
 	// something wrong with erode();
 	assignDropletShapes();
 	constructNewHeightMap();
-	//smoothHeightMap();
+	smoothHeightMap();
 	erodeHeightMap();
 	//std::cout << "End of updateHeightBoi" << std::endl;
 }
@@ -471,7 +488,7 @@ void System::assignDropletShapes() {
 			// particle.radius = cubeRoot(root3) of ((3/2)*mass*waterDensity*pi)), they set density to 1
 			p->clearHemispherePositions();
 			float radius = glm::pow(1.5f*PI*p->getMass()*p->getDensity(), 1.0/3.0);
-			//std::cout << "radius = " << radius << std::endl;
+			std::cout << "radius = " << radius << std::endl;
 			p->setRadius(radius);
 		}
 	}
@@ -624,25 +641,25 @@ void System::erodeHeightMap() {
  */
 	std::cout << "\nERODE" << std::endl;
 	float* h_map = new float[MAP_SIZE];
-	for (int i = 0; i < MAP_WIDTH; i++) {
-		for (int j = 0; j < MAP_HEIGHT; j++) {
-			h_map[index(i,j)] = height_map[index(i,j)];
-		}
+	for (int i = 0; i < MAP_SIZE; i++) {
+		h_map[i] = height_map[i];
 	}
 
 	for (int i = 0; i < MAP_WIDTH; i++) {
 		for (int j = 0; j < MAP_HEIGHT; j++) {
+//	for (int j = 0; j < MAP_HEIGHT; j++) {
+//		for (int i = 0; i < MAP_WIDTH; i++) {
 			int id = id_map[index(i,j)];
 
 			// if the particle is static/a residual, skip
 			if (id != -1 && particleList[id]->isStatic()) {
-				std::cout << "skip " << i << ", " << j << std::endl;
+				//std::cout << "skip " << i << ", " << j << std::endl;
 				continue;
 			}
 
 			// if is boundary cell and not in residual droplet
 			else if (isBoundaryCell(i,j)) {
-				std::cout << "die " << i << ", " << j << " --> ";
+//				std::cout << "die " << i << ", " << j << " --> ";
 				if (id != -1) {
 					//std::cout << "stranger danger ";
 					if (particleList[id]->isResidual()) {
@@ -656,27 +673,75 @@ void System::erodeHeightMap() {
 				//std::cout << "scarrrryyyyy" << std::endl;
 				// shift height inwards
 				// 		first find the neighboring grid with the greatest height
-				int gridWithGreatestHeight = index(i-1,j-1);
+//				int gridWithGreatestHeight = index(i-1,j-1);
 				glm::ivec2 ggh;
 
-				for (int m = -1; m <= 1; m++) {
-					for (int n = -1; n <= 1; n++) {
-						if (m == 0 && n == 0)
-							continue;
-						if (height_map[index(i+m, j+n)]
-									   >= height_map[gridWithGreatestHeight]){
-							gridWithGreatestHeight = index(i+m, j+n);
-							ggh = glm::ivec2(i+m,j+n);
-						}
+//				for (int m = -1; m <= 1; m++) {
+//					for (int n = -1; n <= 1; n++) {
+//						if (m == 0 && n == 0)
+//							continue;
+//						if (height_map[index(i+m, j+n)]
+//									   >= height_map[gridWithGreatestHeight]){
+//
+//							gridWithGreatestHeight = index(i+m, j+n);
+//							ggh = glm::ivec2(i+m,j+n);
+//
+//						}
+//
+//					}
+//				}
 
-					}
+				glm::vec2 gradient( height_map[index(i+1, j+1)] + height_map[index(i+1, j)] + height_map[index(i+1, j-1)]
+								 - (height_map[index(i-1, j+1)] + height_map[index(i-1, j)] + height_map[index(i-1, j-1)])
+								,
+								 height_map[index(i-1, j+1)] + height_map[index(i, j+1)] + height_map[index(i+1, j+1)]
+								 - (height_map[index(i-1, j-1)] + height_map[index(i, j-1)] + height_map[index(i+1, j-1)]) );
+
+
+				// angle = arccos( (gradient * [1,0]) / (|gradient||[1,0]|) )
+				// angle = glm::acos( glm::normalize(gradient).x );
+				float angle = glm::acos( gradient.x/glm::length(gradient) );
+
+				int innerGrid;
+				int m;
+
+				if (gradient.y > 0) // angle = [0, pi]
+					m = 1;
+				else // angle = [pi, 2pi]
+					m = -1;
+
+				if (angle < PI/8) {
+					innerGrid = index(i+1,j);
+					ggh = glm::ivec2(i+1,j);
+				}
+				else if (angle < 3*PI/8){
+					innerGrid = index(i+1, j+m);
+					ggh = glm::ivec2(i+1,j+m);
+				}
+				else if (angle < 5*PI/8){
+					innerGrid = index(i, j+m);
+					ggh = glm::ivec2(i,j+m);
+				}
+				else if (angle < 7*PI/8){
+					innerGrid = index(i-1, j+m);
+					ggh = glm::ivec2(i-1,j+m);
+				}
+				else{
+					innerGrid = index(i-1, j);
+					ggh = glm::ivec2(i-1,j);
 				}
 
-				std::cout << "ggh = " << ggh.x << ", " << ggh.y << std::endl;
- 				// then change height values
+//				std::cout << "ggh = " << ggh.x << ", " << ggh.y << std::endl;
+//				if (i == 9 && j == 12 && ggh.x == 10 && ggh.y == 11)
+//					std::cout << "            height " << height_map[index(9,12)] << " --> " << height_map[index(10,11)] << ", but " << height_map[index(9,11)] << " and " << (height_map[index(10,11)] == height_map[index(9,11)]) << std::endl;
+//				else if (i == 9 && j == 12 && ggh.x == 9 && ggh.y == 11)
+//					std::cout << "            height " << height_map[index(9,12)] << " --> " << height_map[index(9,11)] << ", but " << height_map[index(10,11)] << " and " << (height_map[index(10,11)] <= height_map[index(9,11)]) << std::endl;
+
+				// then change height values
 				// should we also shift ids?? for now, no.
-				h_map[gridWithGreatestHeight] = height_map[index(i,j)];
-				h_map[index(i,j)] = 0.0f;
+				//h_map[gridWithGreatestHeight] = height_map[index(i,j)];
+				h_map[innerGrid] = 110.0f;//height_map[index(i,j)];
+				h_map[index(i,j)] = 1050.0f;//0.0f;
 			}
 			else {
 				//std::cout << "eh" << std::endl;
