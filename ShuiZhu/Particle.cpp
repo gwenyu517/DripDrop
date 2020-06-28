@@ -12,10 +12,16 @@
 
 //const float PI = 3.14159265359f;
 
+int Particle::nextID = 0;
 float Particle::mass_static =  1.0f;
 float Particle::density = 1.0f;
 
+Particle::Particle() {
+
+};
+
 Particle::Particle(glm::vec2 p, float m) {
+	id = nextID++;
 	position = p;
 	velocity = glm::vec2(0,0);
 	timeSinceLastResidual = 0.0;
@@ -25,7 +31,7 @@ Particle::Particle(glm::vec2 p, float m) {
 }
 
 Particle::~Particle() {
-
+	std::cout << "dead pid " << id << std::endl;
 }
 
 void Particle::resetTimeSinceLastResidual() {
@@ -59,6 +65,15 @@ bool Particle::isStatic() {
 
 bool Particle::isResidual() {
 	return (timeSinceLastResidual == 0.0) && (mass <= mass_static);
+}
+
+/**** GETTERS ****/
+
+int Particle::getNextID() {
+	return nextID;
+}
+int Particle::getID() {
+	return id;
 }
 
 glm::vec2 Particle::getPosition() {
@@ -97,12 +112,20 @@ std::unordered_set<int> Particle::getListOfOccupiedCells() {
 	return occupiedCells;
 }
 
+/**** SETTERS ****/
+
+void Particle::mergeID(int id) {
+	this->id = id;
+}
+
 void Particle::setPosition(glm::vec2 p) {
 	position = p;
 }
+
 void Particle::setVelocity(glm::vec2 v) {
 	velocity = v;
 }
+
 void Particle::setMass(float m) {
 	mass = m;
 }

@@ -8,6 +8,9 @@
 
 class Particle {
 private:
+	static int nextID;
+	int id;
+
 	glm::vec2 position;
 	glm::vec2 velocity;
 	float mass;
@@ -24,7 +27,7 @@ private:
 	std::unordered_set<int> occupiedCells;
 
 public:
-	//Particle();
+	Particle();
 	Particle(glm::vec2 p, float m);
 	~Particle();
 
@@ -34,6 +37,8 @@ public:
 	bool isStatic();
 	bool isResidual();
 
+	static int getNextID();
+	int getID();
 	glm::vec2 getPosition();
 	glm::vec2 getVelocity();
 	float getMass();
@@ -45,6 +50,7 @@ public:
 	std::vector<glm::vec2> getHemispherePositions();
 	std::unordered_set<int> getListOfOccupiedCells();
 
+	void mergeID(int id);
 	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
 	void setMass(float m);

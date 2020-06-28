@@ -5,7 +5,7 @@ CXXFLAGS = -Wall -g -std=c++11
 # https://stackoverflow.com/questions/33182500/makefile-circular-dependency-error
 SRC = main
 
-OBJ = $(SRC).o shader.o Particle.o System.o
+OBJ = $(SRC).o shader.o Particle.o System_NP.o #System.o
 DEPS =
 
 # What worked was using freeglut.dll & libfreeglut.a the 32 bit version
