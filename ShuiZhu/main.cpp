@@ -14,7 +14,7 @@
 #include <iostream>
 
 #include "shader.h"
-#include "System.h"
+#include "System_NP.h"
 
 const char* title = "Waaaaa...wo si la";
 GLFWwindow* window;
