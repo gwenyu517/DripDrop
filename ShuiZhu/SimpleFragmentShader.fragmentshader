@@ -14,14 +14,11 @@ void main() {
 
 	float val = texture(myTexture, UV).r;
 
+	//if (val > 0)
+	//	color = vec3(1,1,1);	// white
+	//else
+	//	color = vec3(0,0,0);	// black
 	
-	if (val > 1000)
-		color = vec3(1, 0, 0);	// red = boundary
-	else if (val > 100.0)
-		color = vec3(0, 1, 0);	// green = the one they shifted to
-	else if (val > 0)
-		color = vec3(1, 1, 1);	// others
-	else
-		color = vec3(0,0,0);	// abyss
+	color = vec3(val, val, val);
 	
 }

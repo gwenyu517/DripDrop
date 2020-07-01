@@ -170,8 +170,8 @@ void System::updateVelocity(double dt) {
 				break;
 		}
 		//p->setVelocity(glm::vec2(0,0));
-//		p.setVelocity(velocity*0.5f);
-		p.setVelocity(velocity);	// velocity is in reality
+		p.setVelocity(velocity*0.8f);
+//		p.setVelocity(velocity);	// velocity is in reality
 		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
 
 	}
@@ -741,7 +741,6 @@ void System::erodeHeightMap() {
 	//std::cout << "Finished erodeHeightBOi" << std::endl;
 }
 
-
 bool System::isResidualDropletCell(int i, int j) {
 	if (id_map[index(i,j)][0] == -1)
 		return false;
@@ -754,7 +753,6 @@ bool System::isResidualDropletCell(int i, int j) {
 
 	return false;
 }
-
 
 bool System::isBoundaryCell(int i, int j) {
 	if (height_map[index(i,j)] > 0.0f) {
@@ -865,6 +863,7 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 		np_position = particle.getPosition();
 	else
 		np_position = neighbor.getPosition();
+//	std::cout << "footloose" << std::endl;
 
 	// new particle mass = sum of masses
 	float np_mass = particle.getMass() + neighbor.getMass();
@@ -874,23 +873,25 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 	float neighborMass = neighbor.getMass();
 	glm::vec2 np_velocity = MU * ( particleMass*particle.getVelocity() +
 			neighborMass*neighbor.getVelocity() ) / (particleMass + neighborMass);
-
+//	std::cout << "chub chubs" << std::endl;
 
 	// modify particle for new (merged) particle
 	int np_id = particleID;
 	int old_id = neighborID;
-	std::unordered_set<int> mergeCells = neighbor.getListOfOccupiedCells();
+
 	if ( (neighbor.getListOfOccupiedCells()).size() > (particle.getListOfOccupiedCells()).size() ) {
 		np_id = neighborID;
 		old_id = particleID;
-		mergeCells = particle.getListOfOccupiedCells();
 	}
+	std::unordered_set<int> mergeCells = list[old_id].getListOfOccupiedCells();
 
+//	std::cout << "high neighbor" << std::endl;
 	list[np_id].setPosition(np_position);
 	list[np_id].setMass(np_mass);
 	list[np_id].setVelocity(np_velocity);
 	list[np_id].addOccupiedCells(mergeCells);
 	list[np_id].resetTimeSinceLastResidual();
+//	std::cout << "brainwash complete" << std::endl;
 
 	// modify ID map; merge/change the two particles' ids
 	for (auto mc = mergeCells.begin(); mc != mergeCells.end(); mc++) {
@@ -899,12 +900,25 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 			id_map[*mc].erase(id);
 
 		std::replace(id_map[*mc].begin(), id_map[*mc].end(), old_id, np_id);
+
 	}
+
+	// alternative / more intuitive way for modifying ID map
+//	for (auto mc = mergeCells.begin(); mc != mergeCells.end(); mc++) {
+//		auto id = std::find(id_map[*mc].begin(), id_map[*mc].end(), old_id);
+//		if (*id == old_id)
+//			id_map[*mc].erase(id);
+//		if (std::count(id_map[*mc].begin(), id_map[*mc].end(), np_id) == 0)
+//			id_map[*mc].push_back(np_id);
+//	}
+
+//	std::cout << "immigration complete" << std::endl;
 
 	// delete old particle in new list
 	// and indicate new id on old list
 	list.erase(old_id);
 	particleList[old_id].mergeID(np_id);
+//	std::cout << "assassination successful ; " << old_id << " now " << particleList[old_id].getID() << std::endl;
 }
 
 
