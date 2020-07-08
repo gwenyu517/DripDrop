@@ -91,8 +91,8 @@ System::System(float width, float height, float gridLength) :
 	  Particle::setMass_static(0.028f);	// plot twist: float precision problems, 0.028 is actually 0.028......864267....etc.
 	  //std::cout << "stat = " << Particle::getMass_static() << std::endl;
 
-	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, height/2.0f), 0.02)});
-	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.6f*height), 0.03)});
+	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, 0.8*height), 0.02)});
+	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.825f*height), 0.03)});
 
 //	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
 //	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
@@ -123,6 +123,7 @@ void System::update(double dt) {
 	updatePosition(dt);
 	leaveResidualDroplets(dt);
 	updateHeightMap();
+	deleteOutOfBoundDroplets();
 	mergeDroplets();
 	std::cout << "DONE" << std::endl;
 }
@@ -130,23 +131,24 @@ void System::update(double dt) {
 
 void System::updateVelocity(double dt) {
 	// std::unordered_map<int, Particle>::iterator, for future me's curiosity
-	std::cout << "UPDATE VELOCITY " ;
+	std::cout << "UPDATE VELOCITY " << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
+//		std::cout << "particle " << p.getID() << " " << p.getMass() << std::endl;
 
 		if (p.isStatic())
 			continue;
 
-		std::cout << "mass_static = " << p.getMass_static() << std::endl;
+//		std::cout << "mass_static = " << p.getMass_static() << std::endl;
 		float f_gravity = p.getMass() * GRAVITY;
 		float f_friction = p.getMass_static() * GRAVITY;					// keep in mind that this assumes gravity points
-		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
+//		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
 		glm::vec2 acceleration = glm::vec2(0, f_friction - f_gravity) / p.getMass();		// straight down
-		std::cout << "acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
+//		std::cout << "acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
 		glm::vec2 velocity = p.getVelocity() + acceleration * (float)dt;
-		std::cout << "velocity waaaas = " << p.getVelocity().x << ", " << p.getVelocity().y << std::endl;
-		std::cout << "acceleration * v.x? " << (acceleration.x * p.getVelocity().x) << std::endl;
-		std::cout << "velocity = " << velocity.x << ", " << velocity.y << std::endl;
+//		std::cout << "velocity waaaas = " << p.getVelocity().x << ", " << p.getVelocity().y << std::endl;
+//		std::cout << "acceleration * v.x? " << (acceleration.x * p.getVelocity().x) << std::endl;
+//		std::cout << "velocity = " << velocity.x << ", " << velocity.y << std::endl;
 		float speed = glm::length(velocity);
 
 	//	check 3 region's water amount, then affinity, then random
@@ -155,24 +157,24 @@ void System::updateVelocity(double dt) {
 
 		switch(determineDirectionOfMovement(p)) {
 			case Region::BL :
-				std::cout << "       BL" << std::endl;
+//				std::cout << "       BL" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(-1, -1));
 				break;
 			case Region::B 	:
-				std::cout << "       B" << std::endl;
+//				std::cout << "       B" << std::endl;
 				velocity = speed * glm::vec2(0, -1);
 				break;
 			case Region::BR :
-				std::cout << "       BR" << std::endl;
+//				std::cout << "       BR" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(1, -1));
 				break;
 			default:
 				break;
 		}
 		//p->setVelocity(glm::vec2(0,0));
-		p.setVelocity(velocity*0.8f);
-//		p.setVelocity(velocity);	// velocity is in reality
-		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
+//		p.setVelocity(velocity*0.8f);
+		p.setVelocity(velocity);	// velocity is in reality
+//		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
 
 	}
 	//std::cout << " **************************** I HAVE " << particleList.size() << " PARTICLES" << std::endl;
@@ -199,9 +201,9 @@ System::Region System::determineDirectionOfMovement(Particle p) {
 		max = br;
 		directionOfMovement = Region::BR;
 	}
-	std::cout << "     bl = " << bl << std::endl;
-	std::cout << "     b  = " << b << std::endl;
-	std::cout << "     br = " << br << std::endl;
+//	std::cout << "     bl = " << bl << std::endl;
+//	std::cout << "     b  = " << b << std::endl;
+//	std::cout << "     br = " << br << std::endl;
 
 //	std::cout << "dom " << (int)directionOfMovement << ", with sum " << max << std::endl;
 	if (max > 0.0f)
@@ -234,7 +236,7 @@ System::Region System::determineDirectionOfMovement(Particle p) {
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 	std::uniform_int_distribution<int> distribution(2, 4);
 	Region randomDOM = (Region)distribution(generator);
-	std::cout << "direction " << (int)randomDOM << std::endl;
+//	std::cout << "direction " << (int)randomDOM << std::endl;
 	return randomDOM;
 }
 
@@ -320,7 +322,7 @@ float System::sumOf(glm::vec2 position, Region region, Attrib attrib) {
 
 
 void System::updatePosition(double dt) {
-	std::cout <<"\nUPDATE POSITION ";
+	std::cout <<"UPDATE POSITION " << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
 
@@ -342,7 +344,7 @@ void System::updatePosition(double dt) {
 		//std::cout << "\nNEW POSITION" << std::endl;
 		//std::cout << position.x << ", " << position.y << std::endl;
 		p.setPosition(position);
-		std::cout << "(" << position.x << ", " << position.y;
+//		std::cout << "(" << position.x << ", " << position.y;
 	}
 }
 
@@ -361,31 +363,38 @@ void System::leaveResidualDroplets(double dt) {
 	 * 	else
 	 * 		curr particle.timeSinceLastResidual += dt
 	 */
-	std::cout << "\nLEAVE RESIDUAL?" << std::endl;
+	std::cout << "LEAVE RESIDUAL?" << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
+//		std::cout << p.getID() << " ";
 		if (p.isStatic()) {
-			p.addResidualTime(dt);	// necessary to differentiate static vs residual?
+//			std::cout << "        skip " << p.getID() << std::endl;
+//			p.addResidualTime(dt);	// necessary to differentiate static vs residual?
 			continue;			// do you need to reset residual time??
 		}
 		std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 		std::uniform_real_distribution<float> chance(0.0, std::nextafter(1.0,2.0));
 		if ( p.leaveResidual(dt, chance(generator)) ) {
+//			std::cout << " yes " << std::endl;
 //			std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 			std::uniform_real_distribution<float> distribution(0.1, std::nextafter(0.3,1.0));
 			float a = distribution(generator);
-			std::cout << "a = " << a << std::endl;
+//			std::cout << "a = " << a << std::endl;
 			float np_mass = std::min(p.getMass_static(), a * p.getMass());
 			glm::vec2 np_position = p.getPosition();
 
-			particleList.insert({ Particle::getNextID(), Particle(np_position, np_mass) });
+			int np_ID = Particle::getNextID();
+			particleList.insert({ np_ID, Particle(np_position, np_mass) });
+			particleList[np_ID].setParent(p.getID());
+//			std::cout << "        " << p.getID() << " left " << np_ID << " at " << np_position.x << ", " << np_position.y << std::endl;
+
 			p.setMass(p.getMass() - np_mass);
 			p.resetTimeSinceLastResidual();
 			//std::cout << "time since residual " << p->getTimeSinceLastResidual() << std::endl;
 
 		} else {
 			p.addResidualTime(dt);
-			//std::cout << "time since residual " << p->getTimeSinceLastResidual() << std::endl;
+//			std::cout << "        " << p.getID() << " time since residual " << p.getTimeSinceLastResidual() << std::endl;
 		}
 	}
 }
@@ -397,7 +406,7 @@ void System::updateHeightMap() {
 	constructNewHeightMap();
 	smoothHeightMap();
 	erodeHeightMap();
-	//std::cout << "End of updateHeightBoi" << std::endl;
+	std::cout << "End of updateHeightBoi" << std::endl;
 }
 
 
@@ -417,16 +426,16 @@ void System::assignDropletShapes() {
 	 *			otherwise, the particle should have old q positions for reuse
 	 */
 
-	std::cout << "\nASSIGN DROPLET SHAPE" << std::endl;
+	std::cout << "ASSIGN DROPLET SHAPE" << std::endl;
 
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
-		std::cout << "is static? " << p.isStatic() << std::endl;
+//		std::cout << "is static? " << p.isStatic() << std::endl;
 		//std::cout << "mass = " << p->getMass() << std::endl;
 
 		if (p.isStatic()) {
 			int n = p.getHemispherePositions().size();
-			std::cout << "n = " << n << " sphere positions" << std::endl;
+//			std::cout << "n = " << n << " sphere positions" << std::endl;
 			//std::cout << "number of existing sphere positions = " << n << std::endl;
 			// if particle is newly static, fill in N[1,5] hemisphere positions
 			// else, reuse previous positions
@@ -435,12 +444,12 @@ void System::assignDropletShapes() {
 				std::uniform_int_distribution<int> distribution(1, 5);
 				//n = distribution(generator);
 				n = 5;
-				std::cout << "n = " << n << " sphere positions" << std::endl;
+//				std::cout << "n = " << n << " sphere positions" << std::endl;
 				glm::vec2 q(p.getPosition());
 				p.addHemispherePosition(q);
 				for (int i = 0; i < n - 1; i++) {
 					Region direction = (Region)distribution(generator);
-					std::cout << "sphere at " << (int)direction << std::endl;
+//					std::cout << "sphere at " << (int)direction << std::endl;
 					switch(direction) {
 						case Region::L :
 							q += glm::vec2(-GRID_LENGTH, 0);
@@ -469,7 +478,7 @@ void System::assignDropletShapes() {
 
 			// below is moving radius; just to check
 			//float radius = glm::pow(3*p->getMass() / (2*p->getDensity()*PI), 1.0/3.0);
-			std::cout << "radius = " << radius << std::endl;
+//			std::cout << "radius = " << radius << std::endl;
 			p.setRadius(radius);
 		} else {
 			// if moving
@@ -477,7 +486,7 @@ void System::assignDropletShapes() {
 			// particle.radius = cubeRoot(root3) of ((3/2)*mass*waterDensity*pi)), they set density to 1
 			p.clearHemispherePositions();
 			float radius = glm::pow(1.5f*PI*p.getMass()*p.getDensity(), 1.0/3.0);
-			std::cout << "radius = " << radius << std::endl;
+//			std::cout << "radius = " << radius << std::endl;
 			p.setRadius(radius);
 		}
 	}
@@ -494,7 +503,7 @@ void System::constructNewHeightMap() {
 	 *  			set ID
 	 *  		else, continue
 	 */
-	std::cout << "\nCONSTRUCT HEIGHT MAP" << std::endl;
+	std::cout << "CONSTRUCT HEIGHT MAP" << std::endl;
 
 	// for debug, clear height map every time
 //	for (int i = 0; i < MAP_WIDTH; i++) {
@@ -505,8 +514,12 @@ void System::constructNewHeightMap() {
 
 	for (auto p = particleList.begin(); p != particleList.end(); p++) {
 		Particle &particle = p->second;
-		//glm::vec2 particle_position = particle->getPosition();
 
+		// for debug
+		glm::vec2 particle_position = particle.getPosition();
+
+//		std::cout << particle.getID() << " " << particle_position.x << ", " << particle_position.y;
+//		std::cout << " --> " << index(particle_position) << std::endl;
 		float r = particle.getRadius();
 
 		// YOU FORGOT TO CHECK HEMISPHERE POSITIONS
@@ -531,8 +544,13 @@ void System::constructNewHeightMap() {
 
 			for (int i = x0; i <= x1; i++) {
 				for (int j = y0; j <= y1; j++) {
-					// h in actual terms
 					//std::cout << "inspect index " << 	i,j) << std::endl;
+
+					// if the cell is out of bounds, don't "draw" it
+					if (isOutOfBounds(i,j))
+						continue;
+
+					// h in actual terms
 					float h = r*r - glm::distance(position(i,j), particle_position)*glm::distance(position(i,j), particle_position);
 					if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
 						//std::cout << "h " << index(i,j) << " " << glm::sqrt(h) << std::endl;
@@ -563,6 +581,10 @@ void System::constructNewHeightMap() {
 
 				for (int i = x0; i <= x1; i++) {
 					for (int j = y0; j <= y1; j++) {
+						// if the cell is out of bounds, don't "draw" it
+						if (isOutOfBounds(i,j))
+							continue;
+
 						// h in actual terms
 						float h = r*r - glm::distance(position(i,j), sphere_position)*glm::distance(position(i,j), sphere_position);
 						if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
@@ -586,12 +608,25 @@ void System::constructNewHeightMap() {
 	//std::cout << "NEW HEIGHT MAP MADE" << std::endl;
 }
 
+bool System::isOutOfBounds(int i, int j) {
+	if (i < 0)
+		return true;
+	else if (i > MAP_WIDTH - 1)
+		return true;
+	else if (j < 0)
+		return true;
+	else if (j > MAP_HEIGHT - 1)
+		return true;
+
+	return false;
+}
+
 void System::smoothHeightMap() {
 /*
  * height of every cell = height of (surrounding 8 neighbors + itself) / 9
  * if height < e_h, height = 0 --> e_h = 0.01
  */
-	std::cout <<"\nSMOOTH SON, SMOOTH";
+	std::cout <<"SMOOTH SON, SMOOTH" << std::endl;
 	float* h_map = new float[MAP_SIZE];
 //	std::cout << "Initialized h_map" << std::endl;
 
@@ -640,7 +675,7 @@ void System::erodeHeightMap() {
  * 			height value
  * 			change boundary grid height to 0
  */
-	std::cout << "\nERODE" << std::endl;
+	std::cout << "ERODE" << std::endl;
 	float* h_map = new float[MAP_SIZE];
 	for (int i = 0; i < MAP_SIZE; i++) {
 		h_map[i] = height_map[i];
@@ -742,6 +777,10 @@ void System::erodeHeightMap() {
 }
 
 bool System::isResidualDropletCell(int i, int j) {
+	// QUESTIONABLE NAMING CONVENTION
+	// either the text is asking to skip residuals but not statics --> update condition
+	// or we are skipping all statics (residuals included) --> rename method
+//	std::cout << "hey babe it's residual" << std::endl;
 	if (id_map[index(i,j)][0] == -1)
 		return false;
 
@@ -764,6 +803,18 @@ bool System::isBoundaryCell(int i, int j) {
 		}
 	}
 	return false;
+}
+
+void System::deleteOutOfBoundDroplets() {
+	std::cout << "DELETION" << std::endl;
+	std::unordered_map<int, Particle> updatedList = particleList;
+	for (auto i = particleList.begin(); i != particleList.end(); i++) {
+		Particle &p = i->second;
+		if (p.getListOfOccupiedCells().size() == 0)
+			updatedList.erase(p.getID());
+	}
+
+	particleList = updatedList;
 }
 
 void System::mergeDroplets() {
@@ -807,15 +858,15 @@ void System::mergeDroplets() {
 	for (auto pID = particleList.begin(); pID != particleList.end(); pID++) {
 		Particle &particle = pID->second;
 		int particleID = particle.getID();
-		std::cout << "checking with " << particleID << std::endl;
+//		std::cout << "checking with " << particleID << std::endl;
 		int neighborID = neighboringDroplet(particle);
 		if (neighborID == -1) {
-			std::cout << "no merge" << std::endl;
+//			std::cout << "no merge" << std::endl;
 			continue;
 		}
-		std::cout << "merging neighbor " << neighborID << std::endl;
+//		std::cout << "merging neighbor " << neighborID << std::endl;
 		mergeParticles(updatedList, particleID, neighborID);
-		std::cout << "------------------------" << std::endl;
+//		std::cout << "------------------------" << std::endl;
 	}
 
 	particleList = updatedList;
@@ -838,8 +889,10 @@ int System::neighboringDroplet(Particle &particle) {
 				for (int k = 0; k < neighbor_id_cell.size(); k++) {
 					int neighborID = neighbor_id_cell[k];
 					if (neighborID != -1 && neighborID != particleID) {
-						// check if it was a residual
-						if (particleList[neighborID].isResidual())
+						// check if one is the residual of the other
+						// should we be using updatedList instead??
+						if ( particleList[neighborID].isResidualOf(particleID) ||
+								particle.isResidualOf(neighborID) )
 							continue;
 						else
 							return neighborID;
@@ -854,6 +907,7 @@ int System::neighboringDroplet(Particle &particle) {
 }
 
 void System::mergeParticles(std::unordered_map<int, Particle> &list, int particleID, int neighborID) {
+	std::cout << "merge particles" << std::endl;
 	Particle &particle = list[particleID];
 	Particle &neighbor = list[neighborID];
 
@@ -875,14 +929,34 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 			neighborMass*neighbor.getVelocity() ) / (particleMass + neighborMass);
 //	std::cout << "chub chubs" << std::endl;
 
-	// modify particle for new (merged) particle
-	int np_id = particleID;
-	int old_id = neighborID;
 
-	if ( (neighbor.getListOfOccupiedCells()).size() > (particle.getListOfOccupiedCells()).size() ) {
-		np_id = neighborID;
-		old_id = particleID;
+	int np_id;
+	int old_id;
+	// 	CHOOSE NP_ID WITH
+	// IF STATIC + STATIC --> THE ONE WITH MORE MASS
+	// IF MOVING + MOVING --> THE LOWER ONE
+	// IF STATIC + MOVING --> THE MOVING
+	if (particle.isStatic() && neighbor.isStatic()){
+		np_id = (particle.getMass() >= neighbor.getMass()) ? particleID : neighborID;
 	}
+	else if (!particle.isStatic() && !neighbor.isStatic())
+		np_id = (np_position == particle.getPosition()) ? particleID : neighborID;
+	else
+		np_id = (!particle.isStatic()) ? particleID : neighborID;
+
+	old_id = (np_id == particleID) ? neighborID : particleID;
+
+
+
+	// modify particle for new (merged) particle
+//	int np_id = particleID;
+//	int old_id = neighborID;
+
+//	if ( (neighbor.getListOfOccupiedCells()).size() > (particle.getListOfOccupiedCells()).size() ) {
+//	if ( neighbor.getTimeSinceLastResidual() > particle.getTimeSinceLastResidual() ) {
+//		np_id = neighborID;
+//		old_id = particleID;
+//	}
 	std::unordered_set<int> mergeCells = list[old_id].getListOfOccupiedCells();
 
 //	std::cout << "high neighbor" << std::endl;
@@ -891,28 +965,29 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 	list[np_id].setVelocity(np_velocity);
 	list[np_id].addOccupiedCells(mergeCells);
 	list[np_id].resetTimeSinceLastResidual();
+	list[np_id].clearParent();
 //	std::cout << "brainwash complete" << std::endl;
 
 	// modify ID map; merge/change the two particles' ids
-	for (auto mc = mergeCells.begin(); mc != mergeCells.end(); mc++) {
-		auto id = std::find(id_map[*mc].begin(), id_map[*mc].end(), np_id);
-		if (*id == np_id)
-			id_map[*mc].erase(id);
-
-		std::replace(id_map[*mc].begin(), id_map[*mc].end(), old_id, np_id);
-
-	}
-
-	// alternative / more intuitive way for modifying ID map
 //	for (auto mc = mergeCells.begin(); mc != mergeCells.end(); mc++) {
-//		auto id = std::find(id_map[*mc].begin(), id_map[*mc].end(), old_id);
-//		if (*id == old_id)
+//		auto id = std::find(id_map[*mc].begin(), id_map[*mc].end(), np_id);
+//		if (*id == np_id)
 //			id_map[*mc].erase(id);
-//		if (std::count(id_map[*mc].begin(), id_map[*mc].end(), np_id) == 0)
-//			id_map[*mc].push_back(np_id);
+//
+//		std::replace(id_map[*mc].begin(), id_map[*mc].end(), old_id, np_id);
+//
 //	}
 
-//	std::cout << "immigration complete" << std::endl;
+	// alternative / more intuitive way for modifying ID map
+	for (auto mc = mergeCells.begin(); mc != mergeCells.end(); mc++) {
+		auto id = std::find(id_map[*mc].begin(), id_map[*mc].end(), old_id);
+		if (*id == old_id)
+			id_map[*mc].erase(id);
+		if (std::count(id_map[*mc].begin(), id_map[*mc].end(), np_id) == 0)
+			id_map[*mc].push_back(np_id);
+	}
+
+	std::cout << "immigration complete" << std::endl;
 
 	// delete old particle in new list
 	// and indicate new id on old list

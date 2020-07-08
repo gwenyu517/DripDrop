@@ -15,6 +15,7 @@
 int Particle::nextID = 0;
 float Particle::mass_static =  1.0f;
 float Particle::density = 1.0f;
+//	double maxResidualTime = 0.4;
 
 Particle::Particle() {
 
@@ -22,6 +23,7 @@ Particle::Particle() {
 
 Particle::Particle(glm::vec2 p, float m) {
 	id = nextID++;
+	parentID = -1;
 	position = p;
 	velocity = glm::vec2(0,0);
 	timeSinceLastResidual = 0.0;
@@ -51,10 +53,10 @@ bool Particle::leaveResidual(double dt, float chance) {
 	// they set beta = 3, and dt <= t_max / 3, with t_max = 0.4
 
 
-
 	double a = beta * (dt/maxResidualTime) * std::min(1.0, timeSinceLastResidual/maxResidualTime);
 	//std::cout << "a is " << a << std::endl;
 	double probability = std::min(1.0, a);
+	std::cout << "dt = " << dt << ", a = " << a << std::endl;
 
 	return (chance <= probability);
 }
@@ -63,9 +65,14 @@ bool Particle::isStatic() {
 	return mass <= mass_static;
 }
 
-bool Particle::isResidual() {
-	return (timeSinceLastResidual == 0.0) && (mass <= mass_static);
+bool Particle::isResidualOf(int particleID) {
+	return (parentID == particleID) && (mass <= mass_static);
+//	return (timeSinceLastResidual == 0.0) && (mass <= mass_static);
 }
+
+//bool Particle::isChildOf(Particle &particle) {
+//	return parentID == particle.getID();
+//}
 
 /**** GETTERS ****/
 
@@ -112,10 +119,22 @@ std::unordered_set<int> Particle::getListOfOccupiedCells() {
 	return occupiedCells;
 }
 
+//int Particle::getParentID() {
+//	return parentID;
+//}
+
 /**** SETTERS ****/
 
 void Particle::mergeID(int id) {
 	this->id = id;
+}
+
+void Particle::setParent(int id) {
+	parentID = id;
+}
+
+void Particle::clearParent() {
+	parentID = -1;
 }
 
 void Particle::setPosition(glm::vec2 p) {

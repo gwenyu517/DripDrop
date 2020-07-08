@@ -57,8 +57,8 @@ static GLubyte pixels_test[] = {
 */
 
 // NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
-float system_width = 10.0f;	// cm
-float system_height = 10.0f;	// cm
+float system_width = 30.0f;	// cm
+float system_height = 30.0f;	// cm
 float system_gridlength = 0.1f;
 //float* system_heightMap;
 
@@ -253,6 +253,7 @@ int main() {
 	std::cout << (int)meh << std::endl;
 	std::cout << (int)(system_width/system_gridlength) << std::endl;
 
+	int frame = 1;
 	do {
 		currTime = glfwGetTime();
 
@@ -264,6 +265,7 @@ int main() {
 		// done in main loop since each model will have different MVP (at least for M part)
 		//glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
+		std::cout << "update #" << frame++ << std::endl;
 		test->update(currTime - prevTime);
 		render(test->getHeightMap());
 

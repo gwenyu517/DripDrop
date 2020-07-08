@@ -14,11 +14,11 @@ void main() {
 
 	float val = texture(myTexture, UV).r;
 
-	//if (val > 0)
-	//	color = vec3(1,1,1);	// white
-	//else
-	//	color = vec3(0,0,0);	// black
+	if (val > 0)
+		color = vec3(1,1,1);	// white
+	else
+		color = vec3(0,0,0);	// black
 	
-	color = vec3(val, val, val);
+	//color = vec3(val, val, val);
 	
 }

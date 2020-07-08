@@ -40,12 +40,17 @@ private:
 	void updateHeightMap();
 
 	void assignDropletShapes();
+
 	void constructNewHeightMap();
+	bool isOutOfBounds(int i, int j);
+
 	void smoothHeightMap();
 
 	void erodeHeightMap();
 	bool isResidualDropletCell(int i, int j);
 	bool isBoundaryCell(int i, int j);
+
+	void deleteOutOfBoundDroplets();
 
 	void mergeDroplets();
 	int neighboringDroplet(Particle &particle);

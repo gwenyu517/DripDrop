@@ -10,6 +10,7 @@ class Particle {
 private:
 	static int nextID;
 	int id;
+	int parentID;
 
 	glm::vec2 position;
 	glm::vec2 velocity;
@@ -35,7 +36,8 @@ public:
 	void addResidualTime(double dt);
 	bool leaveResidual(double dt, float chance);
 	bool isStatic();
-	bool isResidual();
+	bool isResidualOf(int particleID);
+//	bool isChildOf(Particle &particle);
 
 	static int getNextID();
 	int getID();
@@ -49,8 +51,11 @@ public:
 	static float getDensity();
 	std::vector<glm::vec2> getHemispherePositions();
 	std::unordered_set<int> getListOfOccupiedCells();
+//	int getParentID();
 
 	void mergeID(int id);
+	void setParent(int id);
+	void clearParent();
 	void setPosition(glm::vec2 p);
 	void setVelocity(glm::vec2 v);
 	void setMass(float m);
