@@ -12,8 +12,10 @@
 const float GRAVITY = 980.665f;	// cm/s^2
 const float PI = 3.14159265359f;
 const int BETA = 3;
-const float E_H =  0.01;
+const float E_H = 0.01;
 const float MU = 1.5f;
+
+
 
 // WARNING: I assumed that +x points right, +y points down, but I feel like that is incorrect...
 
@@ -91,8 +93,11 @@ System::System(float width, float height, float gridLength) :
 	  Particle::setMass_static(0.028f);	// plot twist: float precision problems, 0.028 is actually 0.028......864267....etc.
 	  //std::cout << "stat = " << Particle::getMass_static() << std::endl;
 
-	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, 0.8*height), 0.02)});
+	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, 0.75*height), 0.02)});
 	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.825f*height), 0.03)});
+
+
+//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.5f*height), 0.03)});
 
 //	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
 //	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
@@ -117,6 +122,7 @@ float* System::getHeightMap() {
 
 void System::update(double dt) {
 	std::cout << "___________" << affinitySeed << "____________________" << std::endl;
+//	check();
 	// something is wrong with updateHeightMap
 	std::cout << "dtboi: " << dt << std::endl;
 	updateVelocity(dt);
@@ -126,8 +132,17 @@ void System::update(double dt) {
 	deleteOutOfBoundDroplets();
 	mergeDroplets();
 	std::cout << "DONE" << std::endl;
+//	check();
 }
 
+void System::check() {
+	for (int i = 0; i < MAP_WIDTH; i++) {
+		for (int j = 0; j < MAP_HEIGHT; j++) {
+			if (height_map[index(i,j)] > 0.0f)
+				std::cout << i << ", " << j << " = " << height_map[index(i,j)] << std::endl;
+		}
+	}
+}
 
 void System::updateVelocity(double dt) {
 	// std::unordered_map<int, Particle>::iterator, for future me's curiosity
@@ -342,9 +357,8 @@ void System::updatePosition(double dt) {
 			position.y -= MAP_HEIGHT * GRID_LENGTH;
 
 		//std::cout << "\nNEW POSITION" << std::endl;
-		//std::cout << position.x << ", " << position.y << std::endl;
+		std::cout << p.getID() << " at " << position.x << ", " << position.y << std::endl;
 		p.setPosition(position);
-//		std::cout << "(" << position.x << ", " << position.y;
 	}
 }
 
@@ -447,31 +461,69 @@ void System::assignDropletShapes() {
 //				std::cout << "n = " << n << " sphere positions" << std::endl;
 				glm::vec2 q(p.getPosition());
 				p.addHemispherePosition(q);
+
+				/*** flicker debug ***/
 				for (int i = 0; i < n - 1; i++) {
-					Region direction = (Region)distribution(generator);
-//					std::cout << "sphere at " << (int)direction << std::endl;
+					Region direction = Region::B;
+					if (i == 0)
+						direction = (Region)3;
+					else if (i == 1)
+						direction = (Region)4;
+					else if (i == 2)
+						direction = (Region)3;
+					else if (i == 3)
+						direction = (Region)2;
 					switch(direction) {
-						case Region::L :
-							q += glm::vec2(-GRID_LENGTH, 0);
-							break;
-						case Region::BL :
-							q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
-							break;
-						case Region::B :
-							q += glm::vec2(0, -GRID_LENGTH);
-							break;
-						case Region::BR :
-							q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
-							break;
-						case Region::R :
-							q += glm::vec2(GRID_LENGTH, 0);
-							break;
-						default:
-							break;
+					case Region::L :
+						q += glm::vec2(-GRID_LENGTH, 0);
+						break;
+					case Region::BL :
+						q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+						break;
+					case Region::B :
+						q += glm::vec2(0, -GRID_LENGTH);
+						break;
+					case Region::BR :
+						q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+						break;
+					case Region::R :
+						q += glm::vec2(GRID_LENGTH, 0);
+						break;
+					default:
+						break;
 					}
-					//std::cout << "add position " << q.x << ", " << q.y << std::endl;
 					p.addHemispherePosition(q);
 				}
+
+				/*** end ***/
+
+				/*** original code ***/
+//				for (int i = 0; i < n - 1; i++) {
+//					Region direction = (Region)distribution(generator);
+//					std::cout << "sphere at " << (int)direction << std::endl;
+//					switch(direction) {
+//						case Region::L :
+//							q += glm::vec2(-GRID_LENGTH, 0);
+//							break;
+//						case Region::BL :
+//							q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+//							break;
+//						case Region::B :
+//							q += glm::vec2(0, -GRID_LENGTH);
+//							break;
+//						case Region::BR :
+//							q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+//							break;
+//						case Region::R :
+//							q += glm::vec2(GRID_LENGTH, 0);
+//							break;
+//						default:
+//							break;
+//					}
+////					std::cout << "add position " << q.x << ", " << q.y << std::endl;
+//					p.addHemispherePosition(q);
+//				}
+				/**** end ***/
 			}
 			// particle.radius = cubeRoot((3*pi/4)*(2*mass/N)*waterDensity)
 			float radius = glm::pow(1.5f*PI*p.getMass()*p.getDensity() / n, 1.0/3.0);
@@ -516,11 +568,11 @@ void System::constructNewHeightMap() {
 		Particle &particle = p->second;
 
 		// for debug
-		glm::vec2 particle_position = particle.getPosition();
+//		glm::vec2 particle_position = particle.getPosition();
 
 //		std::cout << particle.getID() << " " << particle_position.x << ", " << particle_position.y;
 //		std::cout << " --> " << index(particle_position) << std::endl;
-		float r = particle.getRadius();
+//		float r = particle.getRadius();
 
 		// YOU FORGOT TO CHECK HEMISPHERE POSITIONS
 		//std::cout << "position = " << particle_position.x << ", " << particle_position.y << std::endl;
@@ -532,80 +584,55 @@ void System::constructNewHeightMap() {
 		// if moving particle
 		if (n == 0) {
 			glm::vec2 particle_position = particle.getPosition();
-			//std::cout << "moving particle position (" << particle_position.x << ", " << particle_position.y << ")" << std::endl;
-			//std::cout << "r = " << r << std::endl;
-			int x0 = (int)((particle_position.x - r) / GRID_LENGTH);
-			int x1 = (int)((particle_position.x + r) / GRID_LENGTH);
-			int y0 = (int)((particle_position.y - r) / GRID_LENGTH);
-			int y1 = (int)((particle_position.y + r) / GRID_LENGTH);
+			placeHemisphere(particle, particle_position);
 
-			//std::cout << "x range = [" << x0 << ", " << x1 << "]" << std::endl;
-			//std::cout << "y range = [" << y0 << ", " << y1 << "]" << std::endl;
-
-			for (int i = x0; i <= x1; i++) {
-				for (int j = y0; j <= y1; j++) {
-					//std::cout << "inspect index " << 	i,j) << std::endl;
-
-					// if the cell is out of bounds, don't "draw" it
-					if (isOutOfBounds(i,j))
-						continue;
-
-					// h in actual terms
-					float h = r*r - glm::distance(position(i,j), particle_position)*glm::distance(position(i,j), particle_position);
-					if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
-						//std::cout << "h " << index(i,j) << " " << glm::sqrt(h) << std::endl;
-						height_map[index(i,j)] = glm::sqrt(h);
-						particle.addOccupiedCells(index(i,j));
-
-						if (id_map[index(i,j)][0] == -1)
-							id_map[index(i,j)][0] = p->first;
-						else if (std::count(id_map[index(i,j)].begin(), id_map[index(i,j)].end(), p->first) == 0)
-							id_map[index(i,j)].push_back(p->first);
-					}
-				}
+			if (glm::distance(particle_position, particle.getPrevPosition()) > GRID_LENGTH){
+				drawLine(particle_position, particle.getPrevPosition(), particle.getRadius(), particle);
 			}
 		}
-		else {
+		else { // static
 			//std::cout << "particle position (" << particle->getPosition().x << ", " << particle->getPosition().y << ")" << std::endl;
 			for (int h = 0; h < n; h++) {
 				glm::vec2 sphere_position = hemispherePositions[h];
-
-				int x0 = (int)((sphere_position.x - r) / GRID_LENGTH);
-				int x1 = (int)((sphere_position.x + r) / GRID_LENGTH);
-				int y0 = (int)((sphere_position.y - r) / GRID_LENGTH);
-				int y1 = (int)((sphere_position.y + r) / GRID_LENGTH);
-
-				//std::cout << "x range = [" << x0 << ", " << x1 << "]" << std::endl;
-				//std::cout << "y range = [" << y0 << ", " << y1 << "]" << std::endl;
-
-
-				for (int i = x0; i <= x1; i++) {
-					for (int j = y0; j <= y1; j++) {
-						// if the cell is out of bounds, don't "draw" it
-						if (isOutOfBounds(i,j))
-							continue;
-
-						// h in actual terms
-						float h = r*r - glm::distance(position(i,j), sphere_position)*glm::distance(position(i,j), sphere_position);
-						if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
-							//std::cout << "h " << index(i,j) << " " << glm::sqrt(h) << std::endl;
-							height_map[index(i,j)] = glm::sqrt(h);
-							particle.addOccupiedCells(index(i,j));
-
-							if (id_map[index(i,j)][0] == -1)
-								id_map[index(i,j)][0] = p->first;
-							else if (std::count(id_map[index(i,j)].begin(), id_map[index(i,j)].end(), p->first) == 0)
-								id_map[index(i,j)].push_back(p->first);
-						}
-					}
-				}
+				placeHemisphere(particle, sphere_position);
 			}
 		}
-
-		// range of indices to check on grid
-
 	}
 	//std::cout << "NEW HEIGHT MAP MADE" << std::endl;
+}
+
+void System::placeHemisphere(Particle &particle, glm::vec2 hemispherePosition) {
+	float r = particle.getRadius();
+	int pID = particle.getID();
+
+	int x0 = (int)((hemispherePosition.x - r) / GRID_LENGTH);
+	int x1 = (int)((hemispherePosition.x + r) / GRID_LENGTH);
+	int y0 = (int)((hemispherePosition.y - r) / GRID_LENGTH);
+	int y1 = (int)((hemispherePosition.y + r) / GRID_LENGTH);
+
+
+
+	for (int i = x0; i <= x1; i++) {
+		for (int j = y0; j <= y1; j++) {
+
+			// if the cell is out of bounds, don't "draw" it
+			if (isOutOfBounds(i,j))
+				continue;
+
+			// h in actual terms
+			float h = r*r - glm::distance(position(i,j), hemispherePosition)*glm::distance(position(i,j), hemispherePosition);
+			if (h > 0 && height_map[index(i,j)] < glm::sqrt(h)){
+				//std::cout << "h " << index(i,j) << " " << glm::sqrt(h) << std::endl;
+				height_map[index(i,j)] = glm::sqrt(h);
+				particle.addOccupiedCells(index(i,j));
+
+				if (id_map[index(i,j)][0] == -1)
+					id_map[index(i,j)][0] = pID;
+				else if (std::count(id_map[index(i,j)].begin(), id_map[index(i,j)].end(), pID) == 0)
+					id_map[index(i,j)].push_back(pID);
+			}
+		}
+	}
 }
 
 bool System::isOutOfBounds(int i, int j) {
@@ -640,6 +667,7 @@ void System::smoothHeightMap() {
 //			std::cout << "Sum" << std::endl;
 //			std::cout << "index hmap" << (index(i, j) >= MAP_SIZE) << std::endl;
 			h_map[index(i,j)] = sum / 9.0f;
+
 			if (h_map[index(i,j)] < E_H) {
 //				if (h_map[index(i,j)] > 0.0f)
 					//std::cout << "died " << index(i,j) << " " << h_map[index(i,j)] << std::endl;
@@ -662,6 +690,8 @@ void System::smoothHeightMap() {
 
 	delete height_map;
 	height_map = h_map;
+
+//	check();
 	//std::cout << "DONE SMOOTH" << std::endl;
 }
 
@@ -743,11 +773,8 @@ void System::erodeHeightMap() {
 					ggh = glm::ivec2(i-1,j);
 				}
 
+
 //				std::cout << "ggh = " << ggh.x << ", " << ggh.y << std::endl;
-//				if (i == 9 && j == 12 && ggh.x == 10 && ggh.y == 11)
-//					std::cout << "            height " << height_map[index(9,12)] << " --> " << height_map[index(10,11)] << ", but " << height_map[index(9,11)] << " and " << (height_map[index(10,11)] == height_map[index(9,11)]) << std::endl;
-//				else if (i == 9 && j == 12 && ggh.x == 9 && ggh.y == 11)
-//					std::cout << "            height " << height_map[index(9,12)] << " --> " << height_map[index(9,11)] << ", but " << height_map[index(10,11)] << " and " << (height_map[index(10,11)] <= height_map[index(9,11)]) << std::endl;
 
 				// then change height values
 				h_map[innerGrid] = height_map[index(i,j)];
@@ -772,6 +799,8 @@ void System::erodeHeightMap() {
 
 	//std:: cout << "after delete height map" << std::endl;
 	height_map = h_map;
+
+//	check();
 
 	//std::cout << "Finished erodeHeightBOi" << std::endl;
 }
@@ -810,8 +839,10 @@ void System::deleteOutOfBoundDroplets() {
 	std::unordered_map<int, Particle> updatedList = particleList;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
-		if (p.getListOfOccupiedCells().size() == 0)
+		if (p.getListOfOccupiedCells().size() == 0) {
+			std::cout << "assassinate " << p.getID() << std::endl;
 			updatedList.erase(p.getID());
+		}
 	}
 
 	particleList = updatedList;
@@ -907,7 +938,7 @@ int System::neighboringDroplet(Particle &particle) {
 }
 
 void System::mergeParticles(std::unordered_map<int, Particle> &list, int particleID, int neighborID) {
-	std::cout << "merge particles" << std::endl;
+	std::cout << "merge particles " << particleID << " + " << neighborID;
 	Particle &particle = list[particleID];
 	Particle &neighbor = list[neighborID];
 
@@ -986,6 +1017,7 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 		if (std::count(id_map[*mc].begin(), id_map[*mc].end(), np_id) == 0)
 			id_map[*mc].push_back(np_id);
 	}
+	std::cout << " --> " << np_id << std::endl;
 
 	std::cout << "immigration complete" << std::endl;
 
@@ -993,6 +1025,7 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 	// and indicate new id on old list
 	list.erase(old_id);
 	particleList[old_id].mergeID(np_id);
+	std::cout << "death of " << old_id << std::endl;
 //	std::cout << "assassination successful ; " << old_id << " now " << particleList[old_id].getID() << std::endl;
 }
 
@@ -1066,7 +1099,148 @@ glm::ivec2 System::gridPosition(int index) {
 	return glm::ivec2(i,j);
 }
 
+glm::ivec2 System::gridPosition(glm::vec2 pos) {
+	return glm::ivec2(pos / GRID_LENGTH);
+}
+
+void System::drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &particle) {
+	int x0 = (int)(p0.x / GRID_LENGTH);
+	int x1 = (int)(p1.x / GRID_LENGTH);
+	int y0 = (int)(p0.y / GRID_LENGTH);
+	int y1 = (int)(p1.y / GRID_LENGTH);
+
+	bool steep = (abs(y1-y0) > abs(x1-x0)) ? true : false;
+	if (steep) {	// do calculations as if it were in the quadrants nearest x-axis
+		int temp = x0;
+		x0 = y0;
+		y0 = temp;
+
+		temp = x1;
+		x1 = y1;
+		y1 = temp;
+	}
+	if (x0 > x1) {	// do calculations as if x were increasing, instead of decreasing
+		int temp = x0;
+		x0 = x1;
+		x1 = temp;
+
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+	}
+
+	int dy = abs(y1-y0);
+	int yStep = y0 > y1 ? -1 : 1;
+	int dx = x1 - x0; // no need to do abs because of if/swap
+	int error = 0;
+	int p_error = 0;
+	int y = y0;
 
 
+	for (int x = x0; x <= x1; x++) {
+//		if (steep)
+//			height_map[index(y,x)] = 1.0f;
+//		else
+//			height_map[index(x,y)] = 1.0f;
+		perpendicular(particle, x, y, dx, dy, p_error, radius, error, steep, yStep);
+		if (error > dx - 2*dy) {
+			y += yStep;
+			error += -2*dx;
+			if (p_error > dx - 2*dy) {
+				perpendicular(particle, x, y, dx, dy, p_error - 2*dx + 2*dy, radius, error, steep, yStep);
+				p_error += -2*dx;
+			}
+			p_error += 2*dy;
+		}
+		error += 2*dy;
+	}
+}
+void System::perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, float radius, int e, bool steep, int yStep) {
+	int x = x0;
+	int y = y0;
+	int error = p_error;
+	int curr_thickness = dx + dy - e;
 
+
+	int w = (std::ceil(radius/GRID_LENGTH)) * 2 * glm::pow(dx*dx + dy*dy, 0.5);  // scale width by 2*D
+
+//	float h = radius*radius;
+
+	while (curr_thickness <= w) {
+		if (steep) {
+			float h = radius*radius - glm::distance(position(y,x), position(y0,x0))*glm::distance(position(y,x), position(y0,x0));
+			if (h > 0 && height_map[index(y,x)] < glm::sqrt(h)){
+				height_map[index(y,x)] = glm::sqrt(h);
+				particle.addOccupiedCells(index(y,x));
+
+				if (id_map[index(y,x)][0] == -1)
+					id_map[index(y,x)][0] = particle.getID();
+				else if (std::count(id_map[index(y,x)].begin(), id_map[index(y,x)].end(), particle.getID()) == 0)
+					id_map[index(y,x)].push_back(particle.getID());
+			}
+		}
+		else {
+			float h = radius*radius - glm::distance(position(x,y), position(x0,y0))*glm::distance(position(x,y), position(x0,y0));
+			if (h > 0 && height_map[index(x,y)] < glm::sqrt(h)){
+				height_map[index(x,y)] = glm::sqrt(h);
+				particle.addOccupiedCells(index(x,y));
+
+				if (id_map[index(x,y)][0] == -1)
+					id_map[index(x,y)][0] = particle.getID();
+				else if (std::count(id_map[index(x,y)].begin(), id_map[index(x,y)].end(), particle.getID()) == 0)
+					id_map[index(x,y)].push_back(particle.getID());
+			}
+		}
+		if (error > dx - 2*dy) {
+			x += -1;
+			error += -2*dx;
+			curr_thickness += 2*dy;
+		}
+		y += yStep;
+		error += 2*dy;
+		curr_thickness += 2*dx;
+//		std::cout << "new stuffs " << x << ", " << y << std::endl;
+	}
+
+	x = x0;
+	y = y0;
+	error = -p_error;
+	curr_thickness = dx + dy + e;
+
+	while (curr_thickness <= w) {
+		if (steep) {
+			float h = radius*radius - glm::distance(position(y,x), position(y0,x0))*glm::distance(position(y,x), position(y0,x0));
+			if (h > 0 && height_map[index(y,x)] < glm::sqrt(h)){
+				height_map[index(y,x)] = glm::sqrt(h);
+				particle.addOccupiedCells(index(y,x));
+
+				if (id_map[index(y,x)][0] == -1)
+					id_map[index(y,x)][0] = particle.getID();
+				else if (std::count(id_map[index(y,x)].begin(), id_map[index(y,x)].end(), particle.getID()) == 0)
+					id_map[index(y,x)].push_back(particle.getID());
+			}
+		}
+		else {
+			float h = radius*radius - glm::distance(position(x,y), position(x0,y0))*glm::distance(position(x,y), position(x0,y0));
+			if (h > 0 && height_map[index(x,y)] < glm::sqrt(h)){
+				height_map[index(x,y)] = glm::sqrt(h);
+				particle.addOccupiedCells(index(x,y));
+
+				if (id_map[index(x,y)][0] == -1)
+					id_map[index(x,y)][0] = particle.getID();
+				else if (std::count(id_map[index(x,y)].begin(), id_map[index(x,y)].end(), particle.getID()) == 0)
+					id_map[index(x,y)].push_back(particle.getID());
+			}
+		}
+		if (error > dx - 2*dy) {
+			x += 1;
+			error += -2*dx;
+			curr_thickness += 2*dy;
+		}
+		y += -yStep;
+		error += 2*dy;
+		curr_thickness += 2*dx;
+	}
+
+}
 

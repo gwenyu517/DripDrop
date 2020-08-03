@@ -25,6 +25,7 @@ Particle::Particle(glm::vec2 p, float m) {
 	id = nextID++;
 	parentID = -1;
 	position = p;
+	prevPosition = position;
 	velocity = glm::vec2(0,0);
 	timeSinceLastResidual = 0.0;
 	mass = m;
@@ -56,8 +57,8 @@ bool Particle::leaveResidual(double dt, float chance) {
 	double a = beta * (dt/maxResidualTime) * std::min(1.0, timeSinceLastResidual/maxResidualTime);
 	//std::cout << "a is " << a << std::endl;
 	double probability = std::min(1.0, a);
-	std::cout << "dt = " << dt << ", a = " << a << std::endl;
-
+//	std::cout << "dt = " << dt << ", a = " << a << std::endl;
+	std::cout << (chance <= probability) << std::endl;
 	return (chance <= probability);
 }
 
@@ -79,29 +80,40 @@ bool Particle::isResidualOf(int particleID) {
 int Particle::getNextID() {
 	return nextID;
 }
+
 int Particle::getID() {
 	return id;
+}
+
+glm::vec2 Particle::getPrevPosition() {
+	return prevPosition;
 }
 
 glm::vec2 Particle::getPosition() {
 	return position;
 }
+
 glm::vec2 Particle::getVelocity() {
 	return velocity;
 }
+
 float Particle::getMass() {
 	return mass;
 }
+
 float Particle::getMass_static() {
 	return mass_static;
 }
 
+
 double Particle::getMaxResidualTime() {
 	return maxResidualTime;
 }
+
 double Particle::getTimeSinceLastResidual() {
 	return timeSinceLastResidual;
 }
+
 
 float Particle::getRadius() {
 	return radius;
@@ -138,6 +150,7 @@ void Particle::clearParent() {
 }
 
 void Particle::setPosition(glm::vec2 p) {
+	prevPosition = position;
 	position = p;
 }
 

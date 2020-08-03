@@ -265,7 +265,7 @@ int main() {
 		// done in main loop since each model will have different MVP (at least for M part)
 		//glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
-		std::cout << "update #" << frame++ << std::endl;
+//		std::cout << "update #" << frame++ << std::endl;
 		test->update(currTime - prevTime);
 		render(test->getHeightMap());
 

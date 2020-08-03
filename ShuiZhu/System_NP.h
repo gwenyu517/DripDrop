@@ -42,6 +42,8 @@ private:
 	void assignDropletShapes();
 
 	void constructNewHeightMap();
+	void placeHemisphere(Particle &particle, glm::vec2 hemispherePosition);
+
 	bool isOutOfBounds(int i, int j);
 
 	void smoothHeightMap();
@@ -55,17 +57,21 @@ private:
 	void mergeDroplets();
 	int neighboringDroplet(Particle &particle);
 	void mergeParticles(std::unordered_map<int, Particle> &list, int particleID, int neighborID);
+
 	int index(glm::vec2 pos);
 	int index(int x, int y);
 	glm::vec2 position(int index);
 	glm::vec2 position(int x, int y);
 	glm::ivec2 gridPosition(int index);
+	glm::ivec2 gridPosition(glm::vec2 pos);
 
 	Region determineDirectionOfMovement(Particle p);
 	float sumOf(glm::vec2 pos, Region region, Attrib attrib);
 
 
 	void check();
+	void drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &particle);
+	void perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, float radius, int e, bool steep, int yStep);
 
 public:
 	//System();

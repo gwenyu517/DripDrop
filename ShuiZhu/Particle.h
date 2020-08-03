@@ -12,6 +12,7 @@ private:
 	int id;
 	int parentID;
 
+	glm::vec2 prevPosition;
 	glm::vec2 position;
 	glm::vec2 velocity;
 	float mass;
@@ -41,6 +42,7 @@ public:
 
 	static int getNextID();
 	int getID();
+	glm::vec2 getPrevPosition();
 	glm::vec2 getPosition();
 	glm::vec2 getVelocity();
 	float getMass();
