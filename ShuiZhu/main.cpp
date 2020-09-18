@@ -1,7 +1,9 @@
+// OpenGL set-up code from http://ogldev.atspace.co.uk/
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
 #include <cmath>
+#include <string>
 
 //GLEW must be included before GLUT or GLFW
 #define GLEW_STATIC
@@ -10,18 +12,32 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
+//#include "CImg.h"
+#include "stb_image.h"
 #include "shader.h"
 #include "System_NP.h"
 
-const char* title = "Waaaaa...wo si la";
+const char* title = "DripDrop";
 GLFWwindow* window;
 int width = 1024;
 int height = 1024;
 const char* vertexShaderFile = "SimpleVertexShader.vertexshader";
-const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
+//const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
+const char* fragmentShaderFile = "Attempt1.fragmentshader";
+
+std::string environment = "Creek";
+std::string cubeFaces[6] = {
+		"posx.jpg",
+		"negx.jpg",
+		"posy.jpg",
+		"negy.jpg",
+		"posz.jpg",
+		"negz.jpg"
+};
 
 double prevTime;
 double currTime;
@@ -29,9 +45,10 @@ double currTime;
 GLuint VertexArrayID;
 GLuint vertexbuffer;
 GLuint elementbuffer;
-GLuint textureID;
-GLuint textureName;
-GLuint MatrixID;
+GLuint heightMap_textureID;
+GLuint programID;
+
+GLuint cubeMap_textureID;
 
 static const GLfloat vertices[] = {
 		-1.0f, -1.0f, 0.0f,		0.0f, 0.0f,
@@ -45,52 +62,25 @@ static const unsigned short indices[] = {
 		0,2,3
 };
 
-static GLubyte pixels_test[] = {
-		255, 0, 0, 		0, 255, 0,
-		0, 0, 255, 		255, 255, 0
-};
-
-/*static GLfloat pixels_test[] = {
-		0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
-};
-*/
+//static GLubyte pixels_test[] = {
+//		255, 0, 0, 		0, 255, 0,
+//		0, 0, 255, 		255, 255, 0
+//};
+//
+//static GLfloat pixels_test[] = {
+//		0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+//		1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f
+//};
 
 // NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
-float system_width = 30.0f;	// cm
-float system_height = 30.0f;	// cm
-float system_gridlength = 0.1f;
+float system_width = 2.0f;	// cm
+float system_height = 2.0f;	// cm
+float system_gridlength = 0.001f;
 //float* system_heightMap;
-
-glm::mat4 generateMVPmatrix() {
-	// Projection matrix : 45 deg field of view, width:height ratio, display range 0.1 to 100 units
-	glm::mat4 Projection = glm::perspective(
-			glm::radians(45.0f),			// vertical field of view, usually between 90 and 30 deg
-			(float)width / (float)height,	// aspect ratio
-			0.1f,							// near clipping plane (keep as big as possible)
-			100.0f							// far clipping plane (keep as little as possible)
-	);
-
-	// Or, for an ortho camera :
-	//glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-
-	// Camera matrix
-	glm::mat4 View = glm::lookAt(
-			glm::vec3(0,0,3),	// Camera at (4,3,3) in world space
-			glm::vec3(0,0,0),	// looks at origin
-			glm::vec3(0,1,0)	// head is up
-	);
-
-	// Model matrix : an identity matrix (model will be at origin)
-	glm::mat4 Model = glm::mat4(1.0f);
-
-	// Model-View-Projection matrix
-	return Projection * View * Model;
-}
 
 void createVertexBuffer() {
 	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);		// associate any VBO/IBO that you bind with this VAO
+	glBindVertexArray(VertexArrayID);		// associate any VBO/EBO_IBO that you bind with this VAO
 
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -121,17 +111,17 @@ void setUpVertexAttributes() {
 }
 void createElementBuffer() {
 	glGenBuffers(1, &elementbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, elementbuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 //	glBufferData(GL_ARRAY_BUFFER, indices.size()*sizeof(unsigned short),
 			//&indices[0], GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(indices),
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),
 				indices, GL_STATIC_DRAW);
 }
 
-void createTexture() {
-	glGenTextures(1, &textureID);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureID);
+void createTextures() {
+	// height map
+	glGenTextures(1, &heightMap_textureID);
+	glBindTexture(GL_TEXTURE_2D, heightMap_textureID);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	glTexImage2D(
@@ -150,6 +140,51 @@ void createTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// cube map
+	glGenTextures(1, &cubeMap_textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap_textureID);
+
+	int width, height, nrChannels;
+	unsigned char* image;
+	for (int i = 0; i < 6; i++) {
+		std::string imageSrc = "cubeMaps/" + environment + "/" + cubeFaces[i];
+//		cimg_library::CImg<unsigned char> image(imageSrc.c_str());
+//		glTexImage2D(
+//				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,		// target
+//				0, 					// level
+//				GL_RGB,					// internal format
+//				image.width(),					// width
+//				image.height(),					// height
+//				0,					// border
+//				GL_RGB,					// format
+//				GL_UNSIGNED_BYTE,			// type
+//				image					// null data --> reserves memory
+//		);
+
+		image = stbi_load(imageSrc.c_str(), &width, &height, &nrChannels, 0);
+		if (image)
+			glTexImage2D(
+					GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,		// target
+					0, 					// level
+					GL_RGB,					// internal format
+					width,					// width
+					height,					// height
+					0,					// border
+					GL_RGB,					// format
+					GL_UNSIGNED_BYTE,			// type
+					image					// null data --> reserves memory
+			);
+		else
+			std::cout << "Failed to load cube map texture" << std::endl;
+		stbi_image_free(image);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
 void cleanUp() {
@@ -160,7 +195,7 @@ void cleanUp() {
 
 void render(float* data) {
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glBindTexture(GL_TEXTURE_2D, heightMap_textureID);
 	glTexSubImage2D(
 			GL_TEXTURE_2D,		// target
 			0,					// level
@@ -172,25 +207,26 @@ void render(float* data) {
 			GL_FLOAT,			// type
 			data
 	);
-	//glUniform1i(textureName, 0);
+//	glUniform1i(glGetUniformLocation(programID, "heightMap"), 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap_textureID);
+//	glUniform1i(glGetUniformLocation(programID, "cubeMap"), 1);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+	// There is no need to repeatedly pass the same data to the GPU using glBind
+	// a VAO basically a set of vertex attributes and VBOs/EBOs; two switch between sets,
+	// just use glBindVertexArray()
+	glBindVertexArray(VertexArrayID);
 
-/*	glDrawElements(
-		GL_TRIANGLES,      // mode
-		//indices.size(),    // count
-		sizeof(indices),
-		GL_UNSIGNED_SHORT,   // type
-		(void*)0           // element array buffer offset
-	);
-*/
+//	glDrawElements(
+//		GL_TRIANGLES,      // mode
+//		//indices.size(),    // count
+//		sizeof(indices),
+//		GL_UNSIGNED_SHORT,   // type
+//		(void*)0           // element array buffer offset
+//	);
+
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
 }
 
 int main() {
@@ -227,7 +263,8 @@ int main() {
 	// Ensure we can capture the escape key being pressed later
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+//	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
 
 	// width, height = 0.3
 	// grid length = 0.01
@@ -235,17 +272,21 @@ int main() {
 
 	createVertexBuffer();
 	setUpVertexAttributes();
-	createTexture();
-	createElementBuffer();
-	GLuint programID = LoadShaders(vertexShaderFile, fragmentShaderFile);
+	createTextures();
+//	createElementBuffer();
+	programID = LoadShaders(vertexShaderFile, fragmentShaderFile);
 
-	//----------- Perspective stuff ----------------
-	//glm::mat4 mvp = generateMVPmatrix();
-	// get handle for "MVP" uniform -- only during initialization
-	//MatrixID = glGetUniformLocation(programID, "MVP");
+//	GLuint textureName = glGetUniformLocation(programID, "heightMap");
+	// placing the glUniform here has no effect, since you must first bind the program
+	// to the context using glUseProgram prior to being able to change a uniform value
+//	glUniform1i(glGetUniformLocation(programID, "heightMap"), 0);
 
-	textureName = glGetUniformLocation(programID, "myTexture");
-	glUniform1i(textureName, 0);
+	glUseProgram(programID);
+	glUniform1f(glGetUniformLocation(programID, "gridLength"), system_gridlength);
+	glm::vec2 step = glm::vec2(system_gridlength/system_width, system_gridlength/system_width);
+	glUniform2fv(glGetUniformLocation(programID, "step"), 1, glm::value_ptr(step));
+	glUniform1i(glGetUniformLocation(programID, "heightMap"), 0);
+	glUniform1i(glGetUniformLocation(programID, "cubeMap"), 1);
 
 	prevTime = glfwGetTime();
 	float meh = system_width/system_gridlength;
@@ -253,7 +294,6 @@ int main() {
 	std::cout << (int)meh << std::endl;
 	std::cout << (int)(system_width/system_gridlength) << std::endl;
 
-	int frame = 1;
 	do {
 		currTime = glfwGetTime();
 
@@ -261,16 +301,12 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(programID);
 
-		// send mvp transformation to currently bound shader, in the "MVP" uniform
-		// done in main loop since each model will have different MVP (at least for M part)
-		//glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-
-//		std::cout << "update #" << frame++ << std::endl;
-		test->update(currTime - prevTime);
+		//test->update(currTime - prevTime);
 		render(test->getHeightMap());
 
 		//std::cout << "time " << currTime - prevTime << std::endl;
 		prevTime = currTime;
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 

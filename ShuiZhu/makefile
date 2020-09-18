@@ -1,11 +1,11 @@
 CXX = g++
-CXXFLAGS = -Wall -g -std=c++11
+CXXFLAGS = -Wall -g -std=gnu++11 #-std=c++11 this flag doesn't work with CImg.h
 
 # fun fact: extra spaces after the end of your list will result in circular dependencies
 # https://stackoverflow.com/questions/33182500/makefile-circular-dependency-error
 SRC = main
 
-OBJ = $(SRC).o shader.o Particle.o System_NP.o #System.o
+OBJ = $(SRC).o shader.o Particle.o System_NP.o stb_image.o #System.o
 DEPS =
 
 # What worked was using freeglut.dll & libfreeglut.a the 32 bit version

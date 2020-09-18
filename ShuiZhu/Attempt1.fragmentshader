@@ -1,0 +1,115 @@
+#version 330 core
+
+in vec2 UV;
+in vec3 bro;
+
+//out vec3 color;
+out vec4 color;
+
+uniform float gridLength;
+uniform vec2 step;
+uniform sampler2D heightMap;
+uniform samplerCube cubeMap;
+
+float height(float i, float j) {
+	return texture( heightMap, vec2(i,j) ).r;
+}
+
+void main() {
+	float n_air = 1.0f;
+	float n_water = 1.333f;
+	float n_glass = 1.52f;
+
+	// default framebuffer clamps [0,1]
+
+	// n(x,y) = (gridLength, 0, height(x+1,y)) - (-gridLength, 0, height(x-1,y)
+	// 	     x (0, gridLength, height(x,y+1)) - (0, -gridLength, height(x,y-1))
+	//	= (2*gridLength, 0, height(x+1,y) - height(x-1,y)) 
+	//	  x (0, 2*gridLength, height(x,y+1) - height(x,y-1))
+
+	float x = UV.x;
+	float y = UV.y;
+	vec3 N = cross( vec3( 2*gridLength, 0.0f, height(x+step.x, y) - height(x-step.x, y) )
+			, vec3( 0.0f, 2*gridLength, height(x, y+step.y) - height(x, y-step.y) ) );
+	N = normalize(N);
+	//color = vec4(N, 1.0f);
+	//vec3 I = normalize( vec3(bro.x, bro.y, -1.0) );
+	//vec3 R = reflect(I, N);
+	//color = texture(cubeMap, R);
+
+// Colors
+	vec4 R = vec4(0);
+	vec4 T = vec4(0);
+
+	vec3 I = normalize( vec3(bro.x, bro.y, -1.0) );	// assuming light source is far, far away; parallel projection
+	float val = texture(heightMap, UV).r;
+	if (val > 0.0f) {
+		// reflect through air, at water
+		vec3 r_ray = reflect(I, N);
+
+		// refract through water
+		vec3 t_ray = refract(I, N, n_air/n_water);
+		t_ray = normalize(t_ray);
+
+		// refract through glass...this is iffy, since technically it could hit the side of the droplet
+		vec3 d = t_ray*height(x,y)/t_ray.z - vec3(0, 0, height(x,y));
+//		vec3 normal = normalize( vec3(x + d.x, y + d.y, 1.0f) );
+		vec3 normal = vec3(0.0f, 0.0f, 1.0f);
+		t_ray = refract(t_ray, normal, n_water/n_glass);
+		t_ray = normalize(t_ray);
+
+		// refract through air?...concerns about t_ray = 0 due to total inner reflection?
+/*		d = t_ray/t_ray.z - vec3(0, 0, 1.0);
+		normal = normalize( vec3(x + d.x, y + d.y, -1.0f) );
+		t_ray = refract(t_ray, normal, n_glass/n_air);
+*/
+		R = texture(cubeMap, r_ray);
+		T = texture(cubeMap, t_ray);
+		//R = vec4(1.0, 1.0, 1.0, 1.0);
+		//T = vec4(0.0, 0.0, 0.0, 1.0);
+	}
+	else {
+		// reflect through air, at glass
+		vec3 r_ray = reflect(I, N);
+
+		// refract through glass;
+		vec3 t_ray = refract(I, N, n_air/n_glass);
+		t_ray = normalize(t_ray);
+		
+		R = texture(cubeMap, r_ray);
+		T = texture(cubeMap, t_ray);
+		//R = vec4(1.0, 1.0, 1.0, 1.0);
+		//T = vec4(0.0, 0.0, 0.0, 1.0);
+	}
+
+// Fresnel Term	
+	float r_perp;
+	float r_para;
+	float r;
+
+	float k = 1.0 - (n_air/n_water)*(n_air/n_water) * (1.0 - dot(N, I)*dot(N, I));
+	if (k < 0.0)
+		r = 1.0f;
+	else {
+		r_perp = (-n_air*dot(N,I) - n_water*sqrt(k)) / (-n_air*dot(N,I) + n_water*sqrt(k));
+		r_perp = r_perp*r_perp;
+
+		r_para = (-n_water*dot(N,I) - n_air*sqrt(k)) / (-n_water*dot(N,I) + n_air*sqrt(k));
+		r_para = r_para*r_para;
+
+		r = (r_perp + r_para)/2.0f;
+	}
+	
+	color = r*R + (1.0-r)*T;
+
+// Basic Skybox mapping
+//	texture(cubeMap, vec3 ray);
+//	vec3 ray = vec3(bro.x, bro.y, -1.0);
+//	color = texture(cubeMap, ray);
+
+//	color = vec4(height(x, y), height(x, y), height(x, y), 1.0f);
+
+// Old school height map only, black and white
+//	float val = texture(heightMap, UV).r;
+//	color = vec4(val, val, val, 1.0);
+}

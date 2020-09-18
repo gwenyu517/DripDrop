@@ -34,7 +34,7 @@ Particle::Particle(glm::vec2 p, float m) {
 }
 
 Particle::~Particle() {
-	std::cout << "dead pid " << id << std::endl;
+//	std::cout << "dead pid " << id << std::endl;
 }
 
 void Particle::resetTimeSinceLastResidual() {
@@ -58,7 +58,7 @@ bool Particle::leaveResidual(double dt, float chance) {
 	//std::cout << "a is " << a << std::endl;
 	double probability = std::min(1.0, a);
 //	std::cout << "dt = " << dt << ", a = " << a << std::endl;
-	std::cout << (chance <= probability) << std::endl;
+//	std::cout << (chance <= probability) << std::endl;
 	return (chance <= probability);
 }
 

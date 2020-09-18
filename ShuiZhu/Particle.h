@@ -13,9 +13,9 @@ private:
 	int parentID;
 
 	glm::vec2 prevPosition;
-	glm::vec2 position;
-	glm::vec2 velocity;
-	float mass;
+	glm::vec2 position;			// cm
+	glm::vec2 velocity;			// cm/s
+	float mass;					// grams
 	float radius;
 	double timeSinceLastResidual;
 

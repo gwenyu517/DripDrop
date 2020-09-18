@@ -34,6 +34,8 @@ private:
 	float* affinity_map; // [0,1] generate on construction
 	std::unordered_map<int, Particle> particleList;
 
+	void generateParticles();
+
 	void updateVelocity(double dt);
 	void updatePosition(double dt);
 	void leaveResidualDroplets(double dt);
@@ -75,7 +77,8 @@ private:
 
 public:
 	//System();
-	System(float width, float height, float gridLength);
+//	System(float width, float height) : System(width, height, 0.1f) {};
+	System(float width, float height, float& gridLength);
 	//System(int width, int height, int initialNumOfParticles);
 	~System();
 
