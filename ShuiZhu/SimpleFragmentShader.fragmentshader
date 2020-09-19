@@ -4,7 +4,7 @@ in vec2 UV;
 
 out vec3 color;
 
-uniform sampler2D myTexture;
+uniform sampler2D heightMap;
 
 void main() {
 //	color = vec3(0,1,0);
@@ -12,7 +12,7 @@ void main() {
 
 	// default framebuffer clamps [0,1]
 
-	float val = texture(myTexture, UV).r;
+	float val = texture(heightMap, UV).r;
 
 
 //	if (val > 50)
@@ -25,11 +25,11 @@ void main() {
 //		color = vec3(1,1,0);	// yellow
 //	else if (val > 10)
 //		color = vec3(1,0,0);	// red
-//	if (val > 0)
-//		color = vec3(1,1,1);	// white
-//	else
-//		color = vec3(0,0,0);	// black
+	if (val > 0)
+		color = vec3(1,1,1);	// white
+	else
+		color = vec3(0,0,0);	// black
 	
-	color = vec3(val*3, val*3, val*3);
+	//color = vec3(val, val, val);
 	
 }

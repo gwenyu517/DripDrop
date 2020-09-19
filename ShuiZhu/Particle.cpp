@@ -57,8 +57,8 @@ bool Particle::leaveResidual(double dt, float chance) {
 	double a = beta * (dt/maxResidualTime) * std::min(1.0, timeSinceLastResidual/maxResidualTime);
 	//std::cout << "a is " << a << std::endl;
 	double probability = std::min(1.0, a);
-//	std::cout << "dt = " << dt << ", a = " << a << std::endl;
-//	std::cout << (chance <= probability) << std::endl;
+	std::cout << "     dt = " << dt << ", a = " << a << std::endl;
+	std::cout << "     " << chance << " " << probability << std::endl;
 	return (chance <= probability);
 }
 

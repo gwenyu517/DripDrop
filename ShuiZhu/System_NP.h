@@ -45,7 +45,8 @@ private:
 
 	void constructNewHeightMap();
 	void placeHemisphere(Particle &particle, glm::vec2 hemispherePosition);
-
+	void drawLine(Particle &particle);
+	void perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, int e, bool steep, int yStep);
 	bool isOutOfBounds(int i, int j);
 
 	void smoothHeightMap();
@@ -72,8 +73,7 @@ private:
 
 
 	void check();
-	void drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &particle);
-	void perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, float radius, int e, bool steep, int yStep);
+
 
 public:
 	//System();

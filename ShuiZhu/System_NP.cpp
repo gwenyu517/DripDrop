@@ -9,7 +9,7 @@
 #include <iomanip>
 
 
-const float GRAVITY = 980.665f;	// cm/s^2
+const float GRAVITY = 50.0f;//162.0f; //980.665f;	// cm/s^2
 const float PI = 3.14159265359f;
 const int BETA = 3;
 const float E_H = 0.01;
@@ -47,7 +47,7 @@ System::System(float width, float height, float& gridLength) :
 	// mersenne_twister_engine with seed from system clock
 	//		(http://www.cplusplus.com/reference/random/mersenne_twister_engine/mersenne_twister_engine/)
 	//affinitySeed = std::chrono::system_clock::now().time_since_epoch().count();
-//	std::mt19937 generator(affinitySeed);
+	//	std::mt19937 generator(affinitySeed);
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 	std::uniform_real_distribution<float> affinity_distribution(0.0, std::nextafter(1.0,2.0));
 	for (int i = 0; i < MAP_SIZE; i++) {
@@ -56,35 +56,43 @@ System::System(float width, float height, float& gridLength) :
 		// https://stackoverflow.com/questions/48716109/generating-a-random-number-between-0-1-c/48716227
 		// https://codeforces.com/blog/entry/61587
 		// https://onedrive.live.com/view.aspx?resid=E66E02DC83EFB165!312&cid=e66e02dc83efb165&lor=shortUrl
-//		affinity_map[i] = 0.5f;
+		//		affinity_map[i] = 0.5f;
 		affinity_distribution(generator);	// random between [0,1]
 	}
 
-	  // static, N=5
-	  minDropletMass = glm::pow(0.0225*0.0225 + GRID_LENGTH/glm::pow(2.0,0.5), 1.5f) * 10.0f / (3.0f * PI * Particle::getDensity());
+	// static, N=5
+//	minDropletMass = glm::pow(0.0225*0.0225 + GRID_LENGTH/glm::pow(2.0,0.5), 1.5f) * 10.0f / (3.0f * PI * Particle::getDensity());
+//	minDropletMass = 0.001;
+	minDropletMass = 0.0005;
 
-	  // moving, r = 0.6
-//	  maxDropletMass = 0.045;
-	  maxDropletMass = 0.03;
+	// moving, r = 0.6
+//	maxDropletMass = 0.045;
+//	maxDropletMass = 0.005;
+//	maxDropletMass = 0.003;
+//	maxDropletMass = 0.002;
+	maxDropletMass = 0.001f;
 
-	  // mass_static --> N=1 gives r = 0.509096..., N=5 gives r = 0.297721...
-	  Particle::setMass_static(0.028f);	// plot twist: float precision problems, 0.028 is actually 0.028......864267....etc.
-	  //std::cout << "stat = " << Particle::getMass_static() << std::endl;
+	// mass_static --> N=1 gives r = 0.509096..., N=5 gives r = 0.297721...
+//	Particle::setMass_static(0.028f);	// plot twist: float precision problems, 0.028 is actually 0.028......864267....etc.
+//	Particle::setMass_static(0.0025f);
+//	Particle::setMass_static(0.0015f);
+	Particle::setMass_static(0.0009f);
+	//std::cout << "stat = " << Particle::getMass_static() << std::endl;
 
-//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, 0.75*height), 0.02)});
-//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.825f*height), 0.03)});
-
-
-	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.5f*height), 0.03)});
-
-//	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
-//	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
-//	  std::cout << "mass ? " << (particleList.begin()->second)->getMass() << std::endl;
+	//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(width/2.0f, 0.75*height), 0.02)});
+	//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.825f*height), 0.03)});
 
 
-	  std::cout << "start???" << std::endl;
+	particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.5f*height), maxDropletMass )});
 
-	  update(0.0);
+	//	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
+	//	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
+	//	  std::cout << "mass ? " << (particleList.begin()->second)->getMass() << std::endl;
+
+
+	std::cout << "start???" << std::endl;
+
+	update(0.0);
 }
 
 System::~System() {
@@ -102,7 +110,7 @@ void System::update(double dt) {
 	std::cout << "___________" << affinitySeed << "____________________" << std::endl;
 
 	std::cout << "dtboi: " << dt << std::endl;
-	//generateParticles();
+	generateParticles();
 	updateVelocity(dt);
 	updatePosition(dt);
 	leaveResidualDroplets(dt);
@@ -162,7 +170,7 @@ void System::updateVelocity(double dt) {
 //		std::cout << "mass_static = " << p.getMass_static() << std::endl;
 		float f_gravity = p.getMass() * GRAVITY;
 		float f_friction = p.getMass_static() * GRAVITY;					// keep in mind that this assumes gravity points
-//		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
+		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
 		glm::vec2 acceleration = glm::vec2(0, f_friction - f_gravity) / p.getMass();		// straight down
 		std::cout << "  " << p.getID() << " acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
 		glm::vec2 velocity = p.getVelocity() + acceleration * (float)dt;
@@ -192,7 +200,7 @@ void System::updateVelocity(double dt) {
 				break;
 		}
 		//p->setVelocity(glm::vec2(0,0));
-//		p.setVelocity(velocity*0.8f);
+//		p.setVelocity(velocity*0.1f);
 		p.setVelocity(velocity);	// velocity is in reality
 //		std::cout << "("<< velocity.x << ", " << velocity.y << ")";
 
@@ -455,7 +463,7 @@ void System::assignDropletShapes() {
 				std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 				std::uniform_int_distribution<int> distribution(1, 5);
 				n = distribution(generator);
-//				n = 5;
+//				n = 1;
 //				std::cout << "n = " << n << " sphere positions" << std::endl;
 				glm::vec2 q(p.getPosition());
 				p.addHemispherePosition(q);
@@ -587,11 +595,11 @@ void System::constructNewHeightMap() {
 			glm::vec2 particlePrevPosition = particle.getPrevPosition();
 
 			if (glm::distance(particle_position, particlePrevPosition) > GRID_LENGTH){
-//				std::cout << "  draw line" << std::endl;
+//				std::cout << "  draw line of dist " << glm::distance(particle_position, particlePrevPosition) << std::endl;
 				glm::ivec2 prevPosition = gridPosition(particlePrevPosition);
 				glm::ivec2 currPosition = gridPosition(particle_position);
 				if (!isOutOfBounds(prevPosition.x, prevPosition.y) || !isOutOfBounds(currPosition.x, currPosition.y))
-					drawLine(particle_position, particle.getPrevPosition(), particle.getRadius(), particle);
+					drawLine(particle);
 
 
 //				std::cout << "  done" << std::endl;
@@ -642,13 +650,21 @@ void System::placeHemisphere(Particle &particle, glm::vec2 hemispherePosition) {
 	}
 }
 
-void System::drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &particle) {
-	std::cout << "  line from " << p0.x << ", " << p0.y << " to " << p1.x << ", " << p1.y << std::endl;
+void System::drawLine(Particle &particle) {
+//	std::cout << "  holy fudgerounds " << particle.getID() << " is static?? " << particle.isStatic() << std::endl;
+//	std::cout << "  line from " << p0.x << ", " << p0.y << " to " << p1.x << ", " << p1.y << std::endl;
+	glm::vec2 p0 = particle.getPosition();
+	glm::vec2 p1 = particle.getPrevPosition();
+
 	int x0 = (int)(p0.x / GRID_LENGTH);
 	int x1 = (int)(p1.x / GRID_LENGTH);
 	int y0 = (int)(p0.y / GRID_LENGTH);
 	int y1 = (int)(p1.y / GRID_LENGTH);
 
+//	std::cout << "      so you mean " << x0 << ", " << y0 << " to " << x1 << ", " << y1 << std::endl;
+
+	if (x0 == x1 && y0 == y1)
+		return;
 	bool steep = (abs(y1-y0) > abs(x1-x0)) ? true : false;
 	if (steep) {	// do calculations as if it were in the quadrants nearest x-axis
 		int temp = x0;
@@ -676,18 +692,22 @@ void System::drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &partic
 	int p_error = 0;
 	int y = y0;
 
+//	std::cout << "      leggo " << x0 << ", " << y0 << " to " << x1 << ", " << y1 << std::endl;
 
+	float radius = particle.getRadius();
 	for (int x = x0; x <= x1; x++) {
 //		if (steep)
 //			height_map[index(y,x)] = 1.0f;
 //		else
 //			height_map[index(x,y)] = 1.0f;
-		perpendicular(particle, x, y, dx, dy, p_error, radius, error, steep, yStep);
+
+		perpendicular(particle, x, y, dx, dy, p_error, error, steep, yStep);
+//		std::cout << " yes " << std::endl;
 		if (error > dx - 2*dy) {
 			y += yStep;
 			error += -2*dx;
 			if (p_error > dx - 2*dy) {
-				perpendicular(particle, x, y, dx, dy, p_error - 2*dx + 2*dy, radius, error, steep, yStep);
+				perpendicular(particle, x, y, dx, dy, p_error - 2*dx + 2*dy, error, steep, yStep);
 				p_error += -2*dx;
 			}
 			p_error += 2*dy;
@@ -696,16 +716,14 @@ void System::drawLine(glm::vec2 p0, glm::vec2 p1, float radius, Particle &partic
 	}
 }
 
-void System::perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, float radius, int e, bool steep, int yStep) {
+void System::perpendicular(Particle &particle, int x0, int y0, int dx, int dy, int p_error, int e, bool steep, int yStep) {
 	int x = x0;
 	int y = y0;
 	int error = p_error;
 	int curr_thickness = dx + dy - e;
-
+	float radius = particle.getRadius();
 
 	int w = (std::ceil(radius/GRID_LENGTH)) * 2 * glm::pow(dx*dx + dy*dy, 0.5);  // scale width by 2*D
-
-//	float h = radius*radius;
 
 	while (curr_thickness <= w) {
 		if (steep) {
