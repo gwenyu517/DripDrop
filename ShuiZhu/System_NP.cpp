@@ -107,7 +107,7 @@ float* System::getHeightMap() {
 }
 
 void System::update(double dt) {
-	std::cout << "___________" << affinitySeed << "____________________" << std::endl;
+	std::cout << "_______________________________" << std::endl;
 
 	std::cout << "dtboi: " << dt << std::endl;
 	generateParticles();
@@ -117,7 +117,7 @@ void System::update(double dt) {
 	updateHeightMap();
 	deleteOutOfBoundDroplets();
 	mergeDroplets();
-	std::cout << "DONE" << std::endl;
+//	std::cout << "DONE" << std::endl;
 //	check();
 }
 
@@ -131,7 +131,7 @@ void System::check() {
 }
 
 void System::generateParticles() {
-	std::cout << "GENERATION" << std::endl;
+//	std::cout << "GENERATION" << std::endl;
 	std::mt19937 generator(std::chrono::system_clock::now().time_since_epoch().count());
 
 	// approximately 80% of newly created masses are less than m_static
@@ -154,12 +154,12 @@ void System::generateParticles() {
 		particleList.insert({ Particle::getNextID(), Particle(glm::vec2(px, py), mass) });
 //		id_map[index(px,py)] = i;				// might not be necessary
 	}
-	std::cout << " ~ we currently have " << particleList.size() << " particles " << std::endl;
+//	std::cout << " ~ we currently have " << particleList.size() << " particles " << std::endl;
 }
 
 void System::updateVelocity(double dt) {
 	// std::unordered_map<int, Particle>::iterator, for future me's curiosity
-	std::cout << "UPDATE VELOCITY " << std::endl;
+//	std::cout << "UPDATE VELOCITY " << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
 //		std::cout << "particle " << p.getID() << " " << p.getMass() << std::endl;
@@ -352,7 +352,7 @@ float System::sumOf(glm::vec2 position, Region region, Attrib attrib) {
 
 
 void System::updatePosition(double dt) {
-	std::cout <<"UPDATE POSITION " << std::endl;
+//	std::cout <<"UPDATE POSITION " << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
 
@@ -383,7 +383,7 @@ void System::leaveResidualDroplets(double dt) {
 	 * 	else
 	 * 		curr particle.timeSinceLastResidual += dt
 	 */
-	std::cout << "LEAVE RESIDUAL?" << std::endl;
+//	std::cout << "LEAVE RESIDUAL?" << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
 //		if (p.getMass() > maxDropletMass)
@@ -428,7 +428,7 @@ void System::updateHeightMap() {
 	constructNewHeightMap();
 	smoothHeightMap();
 	erodeHeightMap();
-	std::cout << "End of updateHeightBoi" << std::endl;
+//	std::cout << "End of updateHeightBoi" << std::endl;
 }
 
 
@@ -448,7 +448,7 @@ void System::assignDropletShapes() {
 	 *			otherwise, the particle should have old q positions for reuse
 	 */
 
-	std::cout << "ASSIGN DROPLET SHAPE" << std::endl;
+//	std::cout << "ASSIGN DROPLET SHAPE" << std::endl;
 
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
@@ -567,7 +567,7 @@ void System::constructNewHeightMap() {
 	 *  			set ID
 	 *  		else, continue
 	 */
-	std::cout << "CONSTRUCT HEIGHT MAP" << std::endl;
+//	std::cout << "CONSTRUCT HEIGHT MAP" << std::endl;
 
 	// for debug, clear height map every time
 //	for (int i = 0; i < MAP_WIDTH; i++) {
@@ -835,7 +835,7 @@ void System::smoothHeightMap() {
  * height of every cell = height of (surrounding 8 neighbors + itself) / 9
  * if height < e_h, height = 0 --> e_h = 0.01
  */
-	std::cout <<"SMOOTH SON, SMOOTH" << std::endl;
+//	std::cout <<"SMOOTH SON, SMOOTH" << std::endl;
 	float* h_map = new float[MAP_SIZE];
 //	std::cout << "Initialized h_map" << std::endl;
 
@@ -887,7 +887,7 @@ void System::erodeHeightMap() {
  * 			height value
  * 			change boundary grid height to 0
  */
-	std::cout << "ERODE" << std::endl;
+//	std::cout << "ERODE" << std::endl;
 	float* h_map = new float[MAP_SIZE];
 	for (int i = 0; i < MAP_SIZE; i++) {
 		h_map[i] = height_map[i];
@@ -1017,7 +1017,7 @@ bool System::isBoundaryCell(int i, int j) {
 }
 
 void System::deleteOutOfBoundDroplets() {
-	std::cout << "DELETION" << std::endl;
+//	std::cout << "DELETION" << std::endl;
 	std::unordered_map<int, Particle> updatedList = particleList;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
@@ -1064,7 +1064,7 @@ void System::mergeDroplets() {
  * 			mass = sum of masses
  */
 
-	std::cout << "MERGE TIME SON" << std::endl;
+//	std::cout << "MERGE TIME SON" << std::endl;
 
 	std::unordered_map<int, Particle> updatedList = particleList;
 

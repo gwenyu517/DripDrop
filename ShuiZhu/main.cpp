@@ -26,8 +26,8 @@ GLFWwindow* window;
 int width = 2048;//1024;
 int height = 2048;//1024;
 const char* vertexShaderFile = "SimpleVertexShader.vertexshader";
-//const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
-const char* fragmentShaderFile = "Attempt1.fragmentshader";
+const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
+//const char* fragmentShaderFile = "Attempt1.fragmentshader";
 
 std::string environment = "Creek";
 std::string cubeFaces[6] = {
