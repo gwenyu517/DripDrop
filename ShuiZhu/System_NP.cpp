@@ -83,14 +83,14 @@ System::System(float width, float height, float& gridLength) :
 	//	  particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.825f*height), 0.03)});
 
 
-	particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.5f*height), maxDropletMass )});
+//	particleList.insert({Particle::getNextID(), Particle(glm::vec2(0.5f*width, 0.5f*height), maxDropletMass )});
 
 	//	  std::cout << "set up position = " << px << ", " << py << " --> " << index(glm::vec2(px,py)) << std::endl;
 	//	  std::cout << "isStatic = " << (particleList.begin()->second)->isStatic() << std::endl;
 	//	  std::cout << "mass ? " << (particleList.begin()->second)->getMass() << std::endl;
 
 
-	std::cout << "start???" << std::endl;
+	std::cout << "start" << std::endl;
 
 	update(0.0);
 }
@@ -148,7 +148,7 @@ void System::generateParticles() {
 	for (int i = 0;i < numberOfParticles_distribution(generator); i++) {
 		float px = px_distribution(generator);
 		float py = py_distribution(generator);
-		std::cout << "  generate at " << px << ", " << py << std::endl;
+//		std::cout << "  generate at " << px << ", " << py << std::endl;
 		float mass = mass_distribution(generator);
 //		std::cout << "    with mass " << mass << std::endl;
 		particleList.insert({ Particle::getNextID(), Particle(glm::vec2(px, py), mass) });
@@ -170,13 +170,13 @@ void System::updateVelocity(double dt) {
 //		std::cout << "mass_static = " << p.getMass_static() << std::endl;
 		float f_gravity = p.getMass() * GRAVITY;
 		float f_friction = p.getMass_static() * GRAVITY;					// keep in mind that this assumes gravity points
-		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
+//		std::cout << "fg = " << f_gravity << ", ff = " << f_friction << std::endl;
 		glm::vec2 acceleration = glm::vec2(0, f_friction - f_gravity) / p.getMass();		// straight down
-		std::cout << "  " << p.getID() << " acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
+//		std::cout << "  " << p.getID() << " acceleration = " << acceleration.x << ", " << acceleration.y << std::endl;
 		glm::vec2 velocity = p.getVelocity() + acceleration * (float)dt;
 //		std::cout << "velocity waaaas = " << p.getVelocity().x << ", " << p.getVelocity().y << std::endl;
 //		std::cout << "acceleration * v.x? " << (acceleration.x * p.getVelocity().x) << std::endl;
-		std::cout << "        velocity = " << velocity.x << ", " << velocity.y << std::endl;
+//		std::cout << "        velocity = " << velocity.x << ", " << velocity.y << std::endl;
 		float speed = glm::length(velocity);
 
 	//	check 3 region's water amount, then affinity, then random
@@ -185,20 +185,22 @@ void System::updateVelocity(double dt) {
 
 		switch(determineDirectionOfMovement(p)) {
 			case Region::BL :
-				std::cout << "       BL" << std::endl;
+//				std::cout << "       BL" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(-1, -1));
 				break;
 			case Region::B 	:
-				std::cout << "       B" << std::endl;
+//				std::cout << "       B" << std::endl;
 				velocity = speed * glm::vec2(0, -1);
 				break;
 			case Region::BR :
-				std::cout << "       BR" << std::endl;
+//				std::cout << "       BR" << std::endl;
 				velocity = speed * glm::normalize(glm::vec2(1, -1));
 				break;
 			default:
 				break;
 		}
+		if (abs(velocity.x) * dt > 1.0f)
+			velocity = velocity / velocity.x;
 		//p->setVelocity(glm::vec2(0,0));
 //		p.setVelocity(velocity*0.1f);
 		p.setVelocity(velocity);	// velocity is in reality
@@ -360,8 +362,8 @@ void System::updatePosition(double dt) {
 		glm::vec2 position = p.getPosition() + p.getVelocity()*(float)dt;
 
 		//std::cout << "\nNEW POSITION" << std::endl;
-		std::cout << "  " << p.getID() << " at " << position.x << ", " << position.y << std::endl;
-		std::cout << "              velocity = " << p.getVelocity().x << ", " << p.getVelocity().y << std::endl;
+//		std::cout << "  " << p.getID() << " at " << position.x << ", " << position.y << std::endl;
+//		std::cout << "              velocity = " << p.getVelocity().x << ", " << p.getVelocity().y << std::endl;
 		p.setPosition(position);
 	}
 }
@@ -384,8 +386,8 @@ void System::leaveResidualDroplets(double dt) {
 	std::cout << "LEAVE RESIDUAL?" << std::endl;
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
-		if (p.getMass() > maxDropletMass)
-			std::cout << p.getID() << " is fat!! " << p.getMass() << std::endl;
+//		if (p.getMass() > maxDropletMass)
+//			std::cout << p.getID() << " is fat!! " << p.getMass() << std::endl;
 //		std::cout << p.getID() << " ";
 		if (p.isStatic()) {
 //			std::cout << "        skip " << p.getID() << std::endl;
@@ -406,7 +408,7 @@ void System::leaveResidualDroplets(double dt) {
 			int np_ID = Particle::getNextID();
 			particleList.insert({ np_ID, Particle(np_position, np_mass) });
 			particleList[np_ID].setParent(p.getID());
-			std::cout << "  " << p.getID() << " left " << np_ID << " at " << np_position.x << ", " << np_position.y << std::endl;
+//			std::cout << "  " << p.getID() << " left " << np_ID << " at " << np_position.x << ", " << np_position.y << std::endl;
 
 			p.setMass(p.getMass() - np_mass);
 			p.resetTimeSinceLastResidual();
@@ -465,6 +467,15 @@ void System::assignDropletShapes() {
 				n = distribution(generator);
 //				n = 1;
 //				std::cout << "n = " << n << " sphere positions" << std::endl;
+
+				// particle.radius = cubeRoot((3*pi/4)*(2*mass/N)*waterDensity)
+				float radius = glm::pow(1.5f*PI*p.getMass()*p.getDensity() / n, 1.0/3.0);
+
+				// below is moving radius; just to check
+				//float radius = glm::pow(3*p->getMass() / (2*p->getDensity()*PI), 1.0/3.0);
+	//			std::cout << "radius = " << radius << std::endl;
+				p.setRadius(radius);
+
 				glm::vec2 q(p.getPosition());
 				p.addHemispherePosition(q);
 
@@ -503,25 +514,26 @@ void System::assignDropletShapes() {
 //
 //				/*** end ***/
 
+				float shift = (0.3f * radius < GRID_LENGTH ? GRID_LENGTH : 0.3f * radius);
 				/*** original code ***/
 				for (int i = 0; i < n - 1; i++) {
 					Region direction = (Region)distribution(generator);
 //					std::cout << "sphere at " << (int)direction << std::endl;
 					switch(direction) {
 						case Region::L :
-							q += glm::vec2(-GRID_LENGTH, 0);
+							q += glm::vec2(-shift, 0);
 							break;
 						case Region::BL :
-							q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+							q += glm::vec2(-glm::sqrt(2), -glm::sqrt(2)) * shift;
 							break;
 						case Region::B :
-							q += glm::vec2(0, -GRID_LENGTH);
+							q += glm::vec2(0, -shift);
 							break;
 						case Region::BR :
-							q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * GRID_LENGTH;
+							q += glm::vec2(glm::sqrt(2), -glm::sqrt(2)) * shift;
 							break;
 						case Region::R :
-							q += glm::vec2(GRID_LENGTH, 0);
+							q += glm::vec2(shift, 0);
 							break;
 						default:
 							break;
@@ -531,13 +543,7 @@ void System::assignDropletShapes() {
 				}
 				/**** end ***/
 			}
-			// particle.radius = cubeRoot((3*pi/4)*(2*mass/N)*waterDensity)
-			float radius = glm::pow(1.5f*PI*p.getMass()*p.getDensity() / n, 1.0/3.0);
 
-			// below is moving radius; just to check
-			//float radius = glm::pow(3*p->getMass() / (2*p->getDensity()*PI), 1.0/3.0);
-//			std::cout << "radius = " << radius << std::endl;
-			p.setRadius(radius);
 		} else {
 			// if moving
 			//std::cout << "moving" << std::endl;
@@ -1016,7 +1022,7 @@ void System::deleteOutOfBoundDroplets() {
 	for (auto i = particleList.begin(); i != particleList.end(); i++) {
 		Particle &p = i->second;
 		if (p.getListOfOccupiedCells().size() == 0) {
-			std::cout << "  assassinate " << p.getID() << std::endl;
+//			std::cout << "  assassinate " << p.getID() << std::endl;
 			updatedList.erase(p.getID());
 		}
 	}
@@ -1114,7 +1120,7 @@ int System::neighboringDroplet(Particle &particle) {
 }
 
 void System::mergeParticles(std::unordered_map<int, Particle> &list, int particleID, int neighborID) {
-	std::cout << "  merge particles " << particleID << " + " << neighborID;
+//	std::cout << "  merge particles " << particleID << " + " << neighborID;
 	Particle &particle = list[particleID];
 	Particle &neighbor = list[neighborID];
 
@@ -1193,15 +1199,15 @@ void System::mergeParticles(std::unordered_map<int, Particle> &list, int particl
 		if (std::count(id_map[*mc].begin(), id_map[*mc].end(), np_id) == 0)
 			id_map[*mc].push_back(np_id);
 	}
-	std::cout << " --> " << np_id << std::endl;
+//	std::cout << " --> " << np_id << std::endl;
 
-	std::cout << "  immigration complete" << std::endl;
+//	std::cout << "  immigration complete" << std::endl;
 
 	// delete old particle in new list
 	// and indicate new id on old list
 	list.erase(old_id);
 	particleList[old_id].mergeID(np_id);
-	std::cout << "  death of " << old_id << std::endl;
+//	std::cout << "  death of " << old_id << std::endl;
 //	std::cout << "assassination successful ; " << old_id << " now " << particleList[old_id].getID() << std::endl;
 }
 

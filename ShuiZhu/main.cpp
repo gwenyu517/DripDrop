@@ -23,8 +23,8 @@
 
 const char* title = "DripDrop";
 GLFWwindow* window;
-int width = 1024;
-int height = 1024;
+int width = 2048;//1024;
+int height = 2048;//1024;
 const char* vertexShaderFile = "SimpleVertexShader.vertexshader";
 //const char* fragmentShaderFile = "SimpleFragmentShader.fragmentshader";
 const char* fragmentShaderFile = "Attempt1.fragmentshader";
@@ -73,9 +73,9 @@ static const unsigned short indices[] = {
 //};
 
 // NOT ENTIRELY SURE WHAT TO DO WITH THESE VARIABLES BUT LIKE YEAH
-float system_width = 2.0f;	// cm
-float system_height = 2.0f;	// cm
-float system_gridlength = 0.001f;
+float system_width = 15.0f;//2.0f;	// cm
+float system_height = 15.0f;//2.0f;	// cm
+float system_gridlength = 0.1f;//0.001f;
 //float* system_heightMap;
 
 void createVertexBuffer() {
@@ -301,7 +301,7 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(programID);
 
-		//test->update(currTime - prevTime);
+		test->update(currTime - prevTime);
 		render(test->getHeightMap());
 
 		//std::cout << "time " << currTime - prevTime << std::endl;

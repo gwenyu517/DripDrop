@@ -25,11 +25,11 @@ void main() {
 //		color = vec3(1,1,0);	// yellow
 //	else if (val > 10)
 //		color = vec3(1,0,0);	// red
-	if (val > 0)
-		color = vec3(1,1,1);	// white
-	else
-		color = vec3(0,0,0);	// black
+//	if (val > 0)
+//		color = vec3(1,1,1);	// white
+//	else
+//		color = vec3(0,0,0);	// black
 	
-	//color = vec3(val, val, val);
+	color = vec3(val*10, val*10, val*10);
 	
 }
